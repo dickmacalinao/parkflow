@@ -45,13 +45,14 @@ export async function updateProfile(
 }
 
 export async function listUsers(
-  filters: { role?: Role; status?: UserStatus; q?: string; page: number; pageSize: number },
+  filters: { role?: Role; status?: UserStatus; propertyId?: string; q?: string; page: number; pageSize: number },
   requestingUser: { id: string; role: Role },
 ) {
   const assignedPropertyId = await getAssignedPropertyId(requestingUser.id, requestingUser.role);
+  const propertyId = assignedPropertyId ?? filters.propertyId;
   const where = {
     deletedAt: null,
-    ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
+    ...(propertyId ? { propertyId } : {}),
     role: filters.role,
     status: filters.status,
     ...(filters.q

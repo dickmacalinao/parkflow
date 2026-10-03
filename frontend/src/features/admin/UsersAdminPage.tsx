@@ -41,8 +41,15 @@ const STATUS_TONE: Record<
 
 export function UsersAdminPage() {
   const { user } = useAuth();
-  const { data: users, isLoading } = useUsers();
+  const [statusFilter, setStatusFilter] = useState("");
+  const [propertyFilter, setPropertyFilter] = useState("");
+  const { data: users, isLoading } = useUsers({
+    status: statusFilter || undefined,
+    propertyId: propertyFilter || undefined,
+  });
   const { data: properties } = useProperties();
+  const canManageUsers =
+    user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
   const updateStatus = useUpdateUserStatus();
   const invite = useInviteUser();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -99,7 +106,9 @@ export function UsersAdminPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Users</h1>
-        <Button onClick={() => setInviteOpen(true)}>Invite user</Button>
+        {canManageUsers && (
+          <Button onClick={() => setInviteOpen(true)}>Invite user</Button>
+        )}
       </div>
 
       {!isLoading && (
@@ -109,9 +118,46 @@ export function UsersAdminPage() {
               <TH>Name</TH>
               <TH>Email</TH>
               <TH>Role</TH>
-              <TH>Property</TH>
-              <TH>Status</TH>
-              <TH>Actions</TH>
+              <TH>
+                <div className="space-y-2">
+                  <span>Property</span>
+                  <Select
+                    aria-label="Filter users by property"
+                    value={propertyFilter}
+                    onChange={(event) => setPropertyFilter(event.target.value)}
+                  >
+                    <option value="">All properties</option>
+                    {properties?.map((property) => (
+                      <option key={property.id} value={property.id}>
+                        {property.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </TH>
+              <TH>
+                <div className="space-y-2">
+                  <span>Status</span>
+                  <Select
+                    aria-label="Filter users by status"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                  >
+                    <option value="">All statuses</option>
+                    {[
+                      "ACTIVE",
+                      "PENDING_VERIFICATION",
+                      "SUSPENDED",
+                      "DEACTIVATED",
+                    ].map((status) => (
+                      <option key={status} value={status}>
+                        {status.replace(/_/g, " ").toLowerCase()}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </TH>
+              {canManageUsers && <TH>Actions</TH>}
             </TR>
           </THead>
           <TBody>
@@ -134,37 +180,40 @@ export function UsersAdminPage() {
                     {u.status.replace(/_/g, " ").toLowerCase()}
                   </Badge>
                 </TD>
-                <TD>
-                  {user?.role === "SUPER_ADMIN" && u.role !== "SUPER_ADMIN" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openAssignment(u)}
-                    >
-                      Assign property
-                    </Button>
-                  )}
-                  {u.status === "ACTIVE" ? (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() =>
-                        updateStatus.mutate({ id: u.id, status: "SUSPENDED" })
-                      }
-                    >
-                      Suspend
-                    </Button>
-                  ) : u.status === "SUSPENDED" ? (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        updateStatus.mutate({ id: u.id, status: "ACTIVE" })
-                      }
-                    >
-                      Reactivate
-                    </Button>
-                  ) : null}
-                </TD>
+                {canManageUsers && (
+                  <TD>
+                    {user?.role === "SUPER_ADMIN" &&
+                      u.role !== "SUPER_ADMIN" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openAssignment(u)}
+                        >
+                          Assign property
+                        </Button>
+                      )}
+                    {u.status === "ACTIVE" ? (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          updateStatus.mutate({ id: u.id, status: "SUSPENDED" })
+                        }
+                      >
+                        Suspend
+                      </Button>
+                    ) : u.status === "SUSPENDED" ? (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          updateStatus.mutate({ id: u.id, status: "ACTIVE" })
+                        }
+                      >
+                        Reactivate
+                      </Button>
+                    ) : null}
+                  </TD>
+                )}
               </TR>
             ))}
           </TBody>

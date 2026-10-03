@@ -60,7 +60,7 @@ router.patch(
 router.get(
   '/',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
+  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER'),
   validate({ query: listUsersQuerySchema }),
   asyncHandler(async (req, res) => {
     res.json(await usersService.listUsers(

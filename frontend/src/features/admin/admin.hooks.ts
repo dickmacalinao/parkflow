@@ -12,7 +12,7 @@ export interface AdminUser {
   createdAt: string;
 }
 
-export function useUsers(params: { role?: string; q?: string } = {}) {
+export function useUsers(params: { role?: string; status?: string; propertyId?: string; q?: string } = {}) {
   return useQuery({
     queryKey: ['admin-users', params],
     queryFn: async () => {

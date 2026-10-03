@@ -44,7 +44,7 @@ const NAV: NavItem[] = [
     to: "/admin/users",
     label: "Users",
     icon: Users,
-    roles: ["SUPER_ADMIN", "SYSTEM_ADMIN"],
+    roles: ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_MANAGER"],
   },
   {
     to: "/admin/audit-logs",

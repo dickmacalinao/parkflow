@@ -34,6 +34,7 @@ export const updateUserPropertySchema = z.object({
 export const listUsersQuerySchema = z.object({
   role: z.nativeEnum(Role).optional(),
   status: z.nativeEnum(UserStatus).optional(),
+  propertyId: z.string().uuid().optional(),
   q: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
