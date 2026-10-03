@@ -1,11 +1,6 @@
 import { Building2, CalendarCheck, CarFront, Clock3 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/Card";
+import { Card, CardContent } from "../../components/ui/Card";
 import { useProperties, useReservationCounts } from "./dashboard.hooks";
 import { Spinner } from "../../components/ui/Spinner";
 
@@ -35,14 +30,8 @@ function StatCard({
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { data: properties, isLoading: loadingProperties } = useProperties();
+  const { data: properties } = useProperties();
   const { data: counts, isLoading: loadingCounts } = useReservationCounts();
-
-  const isStaff = [
-    "SUPER_ADMIN",
-    "PROPERTY_OWNER",
-    "PROPERTY_MANAGER",
-  ].includes(user?.role ?? "");
 
   return (
     <div className="space-y-6">
@@ -59,7 +48,7 @@ export function DashboardPage() {
         <Spinner />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {isStaff && (
+          {user?.role === "SUPER_ADMIN" && (
             <StatCard
               icon={Building2}
               label="Properties"
@@ -82,37 +71,6 @@ export function DashboardPage() {
             value={counts?.checkedIn ?? 0}
           />
         </div>
-      )}
-
-      {isStaff && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your properties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingProperties ? (
-              <Spinner />
-            ) : properties && properties.length > 0 ? (
-              <ul className="divide-y divide-border">
-                {properties.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-center justify-between py-2.5"
-                  >
-                    <span className="font-medium">{p.name}</span>
-                    <span className="text-sm capitalize text-muted-foreground">
-                      {p.status.toLowerCase().replace(/_/g, " ")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No properties yet.
-              </p>
-            )}
-          </CardContent>
-        </Card>
       )}
     </div>
   );
