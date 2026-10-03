@@ -1,0 +1,45 @@
+# Local development only. Production uses Neon (database) + Render (backend) + Cloudflare
+# Pages (frontend) - see docs/06-deployment-guide.md.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: parkflow
+      POSTGRES_PASSWORD: parkflow
+      POSTGRES_DB: parkflow
+    ports:
+      - '5432:5432'
+    volumes:
+      - parkflow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U parkflow']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://parkflow:parkflow@postgres:5432/parkflow?schema=public
+      CLIENT_URL: http://localhost:5173
+      JWT_ACCESS_SECRET: dev-access-secret-not-for-production
+      JWT_REFRESH_SECRET: dev-refresh-secret-not-for-production
+    ports:
+      - '4000:4000'
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+    ports:
+      - '5173:5173'
+
+volumes:
+  parkflow_pg_data:

@@ -1,0 +1,38 @@
+# Render Blueprint - https://render.com/docs/blueprint-spec
+# Import this repo in Render and it provisions the API service directly from this file.
+# Neon is used as the managed Postgres provider instead of Render's own Postgres (see
+# docs/deployment-guide.md); DATABASE_URL below is therefore marked sync: false and must
+# be set manually to the Neon connection string in the Render dashboard.
+services:
+  - type: web
+    name: parkflow-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: BCRYPT_SALT_ROUNDS
+        value: 12
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "ParkFlow <no-reply@parkflow.app>"
+    buildFilter:
+      paths:
+        - backend/**

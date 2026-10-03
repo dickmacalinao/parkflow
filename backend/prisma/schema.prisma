@@ -1,0 +1,494 @@
+// ParkFlow - Property Parking Reservation & Management Platform
+// Prisma schema: PostgreSQL (Neon in production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN        // platform owner
+  SYSTEM_ADMIN       // manages users/roles/platform settings
+  PROPERTY_MANAGER   // operates one or more properties
+  PROPERTY_OWNER     // owns parking inventory, views business performance
+  TENANT             // resident/tenant, reserves parking
+  VISITOR            // guest, temporary parking
+  PARKING_ATTENDANT  // security/attendant, validates access
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum PropertyType {
+  RESIDENTIAL_CONDOMINIUM
+  APARTMENT_COMPLEX
+  OFFICE_BUILDING
+  COMMERCIAL_CENTER
+  SHOPPING_MALL
+  HOTEL_RESORT
+  EVENT_VENUE
+  HOSPITAL
+  UNIVERSITY_SCHOOL
+  MIXED_USE
+}
+
+enum PropertyStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  INACTIVE
+  REJECTED
+}
+
+enum SlotType {
+  STANDARD
+  COMPACT
+  ACCESSIBLE
+  EV_CHARGING
+  MOTORCYCLE
+  OVERSIZED
+  VISITOR
+}
+
+enum SlotStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  BLOCKED       // maintenance / out of service
+  INACTIVE
+}
+
+enum ReservationType {
+  TENANT
+  VISITOR
+  CONTRACTOR
+  EVENT
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  CHECKED_IN
+  CHECKED_OUT
+  COMPLETED
+  EXPIRED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  WAIVED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  WALLET
+  BANK_TRANSFER
+  COMPLIMENTARY
+}
+
+enum ViolationType {
+  UNAUTHORIZED_PARKING
+  EXPIRED_PERMIT
+  WRONG_SLOT
+  BLOCKING_ACCESS
+  OVERSTAY
+  OTHER
+}
+
+enum ViolationStatus {
+  REPORTED
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  WHATSAPP
+  VIBER
+  MESSENGER
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+  READ
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  EXPORT
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Identity & Access
+// ──────────────────────────────────────────────────────────────────────────
+
+model User {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  phone               String?
+  avatarUrl           String?
+  role                Role
+  status              UserStatus @default(PENDING_VERIFICATION)
+
+  emailVerifiedAt     DateTime?
+  emailVerificationToken   String?  @unique
+  emailVerificationExpiresAt DateTime?
+
+  passwordResetToken       String?  @unique
+  passwordResetExpiresAt   DateTime?
+
+  failedLoginAttempts  Int       @default(0)
+  lockedUntil          DateTime?
+  lastLoginAt          DateTime?
+
+  preferences          Json?     // theme, locale, notification prefs, etc.
+
+  // audit fields
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  createdBy            String?
+  updatedBy            String?
+  deletedAt            DateTime? // soft delete
+
+  refreshTokens        RefreshToken[]
+  managedProperties    PropertyManager[]
+  ownedProperties      Property[]        @relation("PropertyOwnerUser")
+  vehicles             Vehicle[]
+  reservations         Reservation[]     @relation("ReservationRequestedBy")
+  decidedReservations  Reservation[]     @relation("ReservationDecidedBy")
+  visitorPassesHosted  VisitorPass[]     @relation("VisitorPassHost")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  violationsReported   Violation[]       @relation("ViolationReportedBy")
+
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  deviceInfo  String?  // user agent, for multi-device session listing
+  ipAddress   String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Properties & Parking Inventory
+// ──────────────────────────────────────────────────────────────────────────
+
+model Property {
+  id            String         @id @default(uuid())
+  name          String
+  type          PropertyType
+  status        PropertyStatus @default(PENDING_APPROVAL)
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String
+  postalCode    String
+  country       String
+  timezone      String         @default("UTC")
+  latitude      Decimal?       @db.Decimal(9, 6)
+  longitude     Decimal?       @db.Decimal(9, 6)
+
+  ownerId       String?
+  owner         User?          @relation("PropertyOwnerUser", fields: [ownerId], references: [id])
+
+  settings      Json?          // cancellation window, grace period, visitor policy, etc.
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  createdBy     String?
+  updatedBy     String?
+  deletedAt     DateTime?
+
+  managers      PropertyManager[]
+  zones         ParkingZone[]
+  reservations  Reservation[]
+  visitorPasses VisitorPass[]
+  auditLogs     AuditLog[]
+
+  @@index([status])
+  @@index([type])
+  @@map("properties")
+}
+
+/// Join table: which Property Managers administer which Property (many-to-many),
+/// with a per-assignment flag for whether they can approve/reject reservations.
+model PropertyManager {
+  id            String   @id @default(uuid())
+  propertyId    String
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  canApprove    Boolean  @default(true)
+  invitedAt     DateTime @default(now())
+  acceptedAt    DateTime?
+
+  @@unique([propertyId, userId])
+  @@map("property_managers")
+}
+
+model ParkingZone {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name        String   // e.g. "Level P1", "North Deck"
+  description String?
+  sortOrder   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  slots       ParkingSlot[]
+
+  @@index([propertyId])
+  @@map("parking_zones")
+}
+
+model ParkingSlot {
+  id            String     @id @default(uuid())
+  zoneId        String
+  zone          ParkingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  code          String     // e.g. "A-01"
+  type          SlotType   @default(STANDARD)
+  status        SlotStatus @default(AVAILABLE)
+  hourlyRate    Decimal?   @db.Decimal(8, 2)
+  dailyRate     Decimal    @db.Decimal(8, 2)
+  monthlyRate   Decimal?   @db.Decimal(8, 2)
+  isEvCharging  Boolean    @default(false)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  reservations  Reservation[]
+
+  @@unique([zoneId, code])
+  @@index([status])
+  @@index([type])
+  @@map("parking_slots")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Vehicles, Reservations, Visitor Passes
+// ──────────────────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  ownerUserId  String
+  owner        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  plateNumber  String
+  make         String?
+  model        String?
+  color        String?
+  isEv         Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  reservations Reservation[]
+
+  @@unique([ownerUserId, plateNumber])
+  @@map("vehicles")
+}
+
+model Reservation {
+  id              String            @id @default(uuid())
+  code            String            @unique // human-readable confirmation code
+
+  propertyId      String
+  property        Property          @relation(fields: [propertyId], references: [id])
+  slotId          String
+  slot            ParkingSlot       @relation(fields: [slotId], references: [id])
+  vehicleId       String?
+  vehicle         Vehicle?          @relation(fields: [vehicleId], references: [id])
+
+  requestedById   String
+  requestedBy     User              @relation("ReservationRequestedBy", fields: [requestedById], references: [id])
+  decidedById     String?
+  decidedBy       User?             @relation("ReservationDecidedBy", fields: [decidedById], references: [id])
+  decidedAt       DateTime?
+  decisionReason  String?
+
+  type            ReservationType
+  status          ReservationStatus @default(PENDING)
+
+  startAt         DateTime
+  endAt           DateTime
+  checkedInAt     DateTime?
+  checkedOutAt    DateTime?
+
+  rate            Decimal           @db.Decimal(8, 2)
+  amount          Decimal           @db.Decimal(10, 2)
+  notes           String?
+
+  qrCodeToken     String?           @unique
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String?
+  updatedBy       String?
+  deletedAt       DateTime?
+
+  payment         Payment?
+  violations      Violation[]
+
+  @@index([propertyId, status])
+  @@index([slotId])
+  @@index([startAt, endAt])
+  @@map("reservations")
+}
+
+model VisitorPass {
+  id            String   @id @default(uuid())
+  propertyId    String
+  property      Property @relation(fields: [propertyId], references: [id])
+  hostUserId    String
+  host          User     @relation("VisitorPassHost", fields: [hostUserId], references: [id])
+
+  visitorName   String
+  visitorPhone  String?
+  plateNumber   String?
+
+  validFrom     DateTime
+  validTo       DateTime
+  qrCodeToken   String   @unique
+  usedAt        DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  @@index([propertyId])
+  @@map("visitor_passes")
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  reservationId   String        @unique
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  providerRef     String?       // external payment processor reference
+  paidAt          DateTime?
+  refundedAt      DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+model Violation {
+  id             String          @id @default(uuid())
+  reservationId  String?
+  reservation    Reservation?    @relation(fields: [reservationId], references: [id])
+  reportedById   String
+  reportedBy     User            @relation("ViolationReportedBy", fields: [reportedById], references: [id])
+
+  type           ViolationType
+  status         ViolationStatus @default(REPORTED)
+  plateNumber    String?
+  slotCode       String?
+  description    String?
+  photoUrl       String?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  resolvedAt     DateTime?
+
+  @@map("violations")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Notifications & Audit
+// ──────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id         String              @id @default(uuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel    NotificationChannel
+  status     NotificationStatus  @default(QUEUED)
+  title      String
+  body       String
+  metadata   Json?
+  readAt     DateTime?
+  sentAt     DateTime?
+
+  createdAt  DateTime            @default(now())
+
+  @@index([userId, status])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  actorId     String?
+  actor       User?       @relation(fields: [actorId], references: [id])
+  propertyId  String?
+  property    Property?   @relation(fields: [propertyId], references: [id])
+
+  action      AuditAction
+  entityType  String      // e.g. "Reservation", "ParkingSlot"
+  entityId    String?
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  before      Json?
+  after       Json?
+
+  createdAt   DateTime    @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
