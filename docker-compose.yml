@@ -4,8 +4,8 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: parkflow
-      POSTGRES_PASSWORD: parkflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: parkflow
     ports:
       - '5432:5432'
@@ -25,7 +25,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 4000
-      DATABASE_URL: postgresql://parkflow:parkflow@postgres:5432/parkflow?schema=public
+      DATABASE_URL: postgresql://postgres:admin@postgres:5432/parkflow?schema=public
       CLIENT_URL: http://localhost:5173
       JWT_ACCESS_SECRET: dev-access-secret-not-for-production
       JWT_REFRESH_SECRET: dev-refresh-secret-not-for-production

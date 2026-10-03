@@ -353,16 +353,20 @@ model Reservation {
   requestedBy     User              @relation("ReservationRequestedBy", fields: [requestedById], references: [id])
   decidedById     String?
   decidedBy       User?             @relation("ReservationDecidedBy", fields: [decidedById], references: [id])
-  decidedAt       DateTime?
+  decidedAt       DateTime?         @db.Timestamptz(6)
   decisionReason  String?
 
   type            ReservationType
   status          ReservationStatus @default(PENDING)
 
-  startAt         DateTime
-  endAt           DateTime
-  checkedInAt     DateTime?
-  checkedOutAt    DateTime?
+  // timestamptz, not the Prisma default of bare `timestamp`: these must be unambiguous
+  // absolute instants, both for correctness across the property's local timezone and
+  // because the overlap-prevention constraint's generated `stay` column requires it
+  // (see prisma/sql/add-reservation-overlap-constraint.sql).
+  startAt         DateTime  @db.Timestamptz(6)
+  endAt           DateTime  @db.Timestamptz(6)
+  checkedInAt     DateTime?         @db.Timestamptz(6)
+  checkedOutAt    DateTime?         @db.Timestamptz(6)
 
   rate            Decimal           @db.Decimal(8, 2)
   amount          Decimal           @db.Decimal(10, 2)
@@ -396,8 +400,8 @@ model VisitorPass {
   visitorPhone  String?
   plateNumber   String?
 
-  validFrom     DateTime
-  validTo       DateTime
+  validFrom     DateTime  @db.Timestamptz(6)
+  validTo       DateTime  @db.Timestamptz(6)
   qrCodeToken   String   @unique
   usedAt        DateTime?
 
