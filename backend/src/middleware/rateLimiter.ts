@@ -12,7 +12,7 @@ export const apiRateLimiter = rateLimit({
 // Tighter limiter for auth endpoints to slow down credential-stuffing / brute force.
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { code: 'RATE_LIMITED', message: 'Too many attempts. Try again in 15 minutes.' } },
