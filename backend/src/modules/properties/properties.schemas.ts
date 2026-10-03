@@ -17,7 +17,14 @@ export const createPropertySchema = z.object({
   settings: z.record(z.unknown()).optional(),
 });
 
-export const updatePropertySchema = createPropertySchema.partial();
+export const updatePropertySchema = createPropertySchema
+  .omit({ ownerId: true })
+  .partial()
+  .extend({
+    addressLine2: z.string().trim().nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
+  });
 
 export const decidePropertySchema = z.object({
   status: z.enum([PropertyStatus.ACTIVE, PropertyStatus.REJECTED]),

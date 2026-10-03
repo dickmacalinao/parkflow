@@ -12,7 +12,11 @@ const WITH_RELATIONS = {
 
 export async function createProperty(data: Record<string, unknown>, req: Request) {
   const property = await prisma.property.create({
-    data: { ...data, createdBy: req.user?.id } as Parameters<typeof prisma.property.create>[0]['data'],
+    data: {
+      ...data,
+      ownerId: req.user?.role === 'PROPERTY_OWNER' ? req.user.id : data.ownerId,
+      createdBy: req.user?.id,
+    } as Parameters<typeof prisma.property.create>[0]['data'],
   });
   await recordAudit({ req, action: AuditAction.CREATE, entityType: 'Property', entityId: property.id, propertyId: property.id });
   return property;
@@ -31,7 +35,11 @@ export async function listProperties(filters: { status?: PropertyStatus; type?: 
       orderBy: { createdAt: 'desc' },
       skip: (filters.page - 1) * filters.pageSize,
       take: filters.pageSize,
-      include: { owner: { select: { id: true, firstName: true, lastName: true } }, _count: { select: { zones: true } } },
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true } },
+        managers: { select: { userId: true } },
+        _count: { select: { zones: true } },
+      },
     }),
     prisma.property.count({ where }),
   ]);
@@ -45,10 +53,13 @@ export async function getProperty(id: string) {
 }
 
 export async function updateProperty(id: string, data: Record<string, unknown>, req: Request) {
-  const property = await prisma.property.update({
-    where: { id },
-    data: { ...data, updatedBy: req.user?.id } as Parameters<typeof prisma.property.update>[0]['data'],
+  const result = await prisma.property.updateMany({
+    where: { id, deletedAt: null },
+    data: { ...data, updatedBy: req.user?.id } as Parameters<typeof prisma.property.updateMany>[0]['data'],
   });
+  if (!result.count) throw notFound('Property not found.');
+  const property = await prisma.property.findFirst({ where: { id, deletedAt: null } });
+  if (!property) throw notFound('Property not found.');
   await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'Property', entityId: id, propertyId: id });
   return property;
 }
@@ -71,7 +82,11 @@ export async function decideProperty(id: string, status: PropertyStatus.ACTIVE |
 }
 
 export async function softDeleteProperty(id: string, req: Request) {
-  await prisma.property.update({ where: { id }, data: { deletedAt: new Date(), updatedBy: req.user?.id } });
+  const result = await prisma.property.updateMany({
+    where: { id, deletedAt: null },
+    data: { deletedAt: new Date(), updatedBy: req.user?.id },
+  });
+  if (!result.count) throw notFound('Property not found.');
   await recordAudit({ req, action: AuditAction.DELETE, entityType: 'Property', entityId: id, propertyId: id });
 }
 
@@ -88,7 +103,7 @@ export async function assignManager(propertyId: string, userId: string, canAppro
 /** True if the user manages (or owns, or is a platform admin for) this property - used for row-level authorization. */
 export async function userCanManageProperty(userId: string, role: string, propertyId: string): Promise<boolean> {
   if (role === 'SUPER_ADMIN' || role === 'SYSTEM_ADMIN') return true;
-  const property = await prisma.property.findUnique({ where: { id: propertyId }, select: { ownerId: true } });
+  const property = await prisma.property.findFirst({ where: { id: propertyId, deletedAt: null }, select: { ownerId: true } });
   if (property?.ownerId === userId) return true;
   const managerLink = await prisma.propertyManager.findUnique({ where: { propertyId_userId: { propertyId, userId } } });
   return !!managerLink;
