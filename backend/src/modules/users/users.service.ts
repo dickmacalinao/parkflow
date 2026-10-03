@@ -1,4 +1,4 @@
-import { AuditAction, Role, UserStatus } from '@prisma/client';
+import { AuditAction, Role, UserStatus, type Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, notFound } from '../../utils/errors.js';
 import { hashPassword } from '../../utils/password.js';
@@ -28,12 +28,17 @@ export async function getProfile(userId: string) {
   return user;
 }
 
-export async function updateProfile(userId: string, data: Partial<{ firstName: string; lastName: string; phone: string; avatarUrl: string; preferences: Record<string, unknown> }>) {
+export async function updateProfile(
+  userId: string,
+  data: Pick<Prisma.UserUpdateInput, 'firstName' | 'lastName' | 'phone' | 'avatarUrl' | 'preferences'>,
+  req: Request
+) {
   const user = await prisma.user.update({
     where: { id: userId },
     data: { ...data, updatedBy: userId },
     select: PUBLIC_FIELDS,
   });
+  await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'User', entityId: userId });
   return user;
 }
 

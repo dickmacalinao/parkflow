@@ -42,7 +42,7 @@ router.patch(
   requireAuth,
   validate({ body: updateProfileSchema }),
   asyncHandler(async (req, res) => {
-    res.json(await usersService.updateProfile(req.user!.id, req.body));
+    res.json(await usersService.updateProfile(req.user!.id, req.body, req));
   })
 );
 
