@@ -15,7 +15,7 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-4 p-5">
+      <CardContent className="flex items-center gap-4 p-5 pt-5">
         <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
           <Icon className="h-5 w-5" />
         </div>

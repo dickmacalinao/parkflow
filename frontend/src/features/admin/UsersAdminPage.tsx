@@ -21,12 +21,12 @@ import { useAuth } from "../../context/AuthContext";
 import type { AdminUser } from "./admin.hooks";
 
 const ROLES = [
-  "SUPER_ADMIN",
-  "PROPERTY_MANAGER",
-  "PROPERTY_OWNER",
-  "TENANT",
-  "VISITOR",
-  "PARKING_ATTENDANT",
+  { label: "Super Admin", value: "SUPER_ADMIN" },
+  { label: "Property Manager", value: "PROPERTY_MANAGER" },
+  { label: "Property Owner", value: "PROPERTY_OWNER" },
+  { label: "Tenant", value: "TENANT" },
+  { label: "Visitor", value: "VISITOR" },
+  { label: "Parking Attendant", value: "PARKING_ATTENDANT" },
 ];
 const STATUS_TONE: Record<
   string,
@@ -40,9 +40,11 @@ const STATUS_TONE: Record<
 
 export function UsersAdminPage() {
   const { user } = useAuth();
+  const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [propertyFilter, setPropertyFilter] = useState("");
   const { data: users, isLoading } = useUsers({
+    role: roleFilter || undefined,
     status: statusFilter || undefined,
     propertyId: propertyFilter || undefined,
   });
@@ -129,7 +131,27 @@ export function UsersAdminPage() {
             <TR>
               <TH>Name</TH>
               <TH>Email</TH>
-              <TH>Role</TH>
+              <TH>
+                <div className="space-y-2">
+                  <span>Role</span>
+                  <Select
+                    aria-label="Filter users by role"
+                    value={roleFilter}
+                    onChange={(event) => setRoleFilter(event.target.value)}
+                  >
+                    <option value="">All roles</option>
+                    {ROLES.filter((role) =>
+                      user?.role === "SUPER_ADMIN"
+                        ? true
+                        : role.value !== "SUPER_ADMIN",
+                    ).map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </TH>
               {isSuperAdmin && (
                 <TH>
                   <div className="space-y-2">
@@ -279,10 +301,10 @@ export function UsersAdminPage() {
             <Select id="role" {...register("role", { required: true })}>
               {ROLES.filter(
                 (role) =>
-                  user?.role === "SUPER_ADMIN" || role !== "SUPER_ADMIN",
+                  user?.role === "SUPER_ADMIN" || role.value !== "SUPER_ADMIN",
               ).map((r) => (
-                <option key={r} value={r}>
-                  {r.replace(/_/g, " ")}
+                <option key={r.value} value={r.value}>
+                  {r.label}
                 </option>
               ))}
             </Select>
