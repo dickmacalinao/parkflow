@@ -8,6 +8,7 @@ export interface AdminUser {
   lastName: string;
   role: string;
   status: string;
+  propertyId: string | null;
   createdAt: string;
 }
 
@@ -26,6 +27,17 @@ export function useUpdateUserStatus() {
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { data } = await apiClient.patch(`/users/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+}
+
+export function useAssignUserProperty() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, propertyId }: { id: string; propertyId: string }) => {
+      const { data } = await apiClient.patch(`/users/${id}/property`, { propertyId });
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),

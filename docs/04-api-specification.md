@@ -12,7 +12,7 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/register` | none | Create a TENANT/VISITOR account, sends verification email |
+| POST | `/register` | none | Create a TENANT/VISITOR account for an active property, sends verification email |
 | POST | `/login` | none | Returns `{ user, accessToken, refreshToken }` |
 | POST | `/refresh` | none (refresh token in body) | Rotates refresh token, returns new pair |
 | POST | `/logout` | none (refresh token in body) | Revokes one refresh token |
@@ -45,8 +45,9 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 |---|---|---|---|
 | GET | `/me` | Bearer | Current user's profile |
 | PATCH | `/me` | Bearer | Update own profile/preferences/avatar URL |
-| GET | `/` | Admin | Paginated user list, filter by role/status/search |
+| GET | `/` | Admin | Paginated user list, scoped to assigned property for System Admin |
 | POST | `/invite` | Admin | Invite a Property Manager/Owner (or any role) |
+| PATCH | `/:id/property` | Super Admin | Assign or reassign a user to an active property (Super Admin remains unassigned) |
 | PATCH | `/:id/status` | Admin | Activate/suspend/deactivate |
 | DELETE | `/:id` | Super Admin | Soft-delete |
 
@@ -55,8 +56,9 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | POST | `/` | Admin, Owner | Register a property (status: PENDING_APPROVAL) |
-| GET | `/` | Any authenticated | List, filter by status/type/search |
-| GET | `/:id` | Any authenticated | Detail, with zones/slots/managers |
+| GET | `/` | Any authenticated | List assigned property; Super Admin can list all |
+| GET | `/available` | none | List active properties for account registration |
+| GET | `/:id` | Any authenticated | Assigned property detail; Super Admin can access all |
 | PATCH | `/:id` | Admin or assigned manager/owner | Update |
 | POST | `/:id/decision` | Admin | Approve or reject a pending property |
 | DELETE | `/:id` | Admin | Soft-delete |
@@ -81,7 +83,7 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/` | Any authenticated | Request a reservation (status: PENDING) |
+| POST | `/` | Any authenticated except Super Admin | Request a reservation in the assigned property (status: PENDING) |
 | GET | `/` | Any authenticated | List (own only for Tenant/Visitor; all for staff) |
 | GET | `/:id` | Any authenticated | Detail (own or staff) |
 | POST | `/:id/decision` | Manager+ | Approve/reject a pending reservation |

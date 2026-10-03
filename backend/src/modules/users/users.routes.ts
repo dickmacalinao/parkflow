@@ -7,6 +7,7 @@ import {
   inviteUserSchema,
   listUsersQuerySchema,
   updateProfileSchema,
+  updateUserPropertySchema,
   updateUserStatusSchema,
 } from './users.schemas.js';
 import * as usersService from './users.service.js';
@@ -62,7 +63,10 @@ router.get(
   requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
   validate({ query: listUsersQuerySchema }),
   asyncHandler(async (req, res) => {
-    res.json(await usersService.listUsers(req.query as unknown as z.infer<typeof listUsersQuerySchema>));
+    res.json(await usersService.listUsers(
+      req.query as unknown as z.infer<typeof listUsersQuerySchema>,
+      req.user!,
+    ));
   })
 );
 
@@ -96,6 +100,16 @@ router.post(
  *     responses:
  *       200: { description: Updated status }
  */
+router.patch(
+  '/:id/property',
+  requireAuth,
+  requireRole('SUPER_ADMIN'),
+  validate({ body: updateUserPropertySchema, params: z.object({ id: z.string().uuid() }) }),
+  asyncHandler(async (req, res) => {
+    res.json(await usersService.updateUserProperty(req.params.id, req.body.propertyId, req));
+  })
+);
+
 router.patch(
   '/:id/status',
   requireAuth,

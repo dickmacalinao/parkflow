@@ -10,12 +10,13 @@ import { createApp } from '../../src/app.js';
 import { prisma } from '../../src/lib/prisma.js';
 
 const app = createApp();
-let dbAvailable = true;
+let dbAvailable = false;
 
 beforeAll(async () => {
   try {
     execSync('npx prisma db push --skip-generate', { stdio: 'ignore' });
     await prisma.$connect();
+    dbAvailable = true;
   } catch {
     dbAvailable = false;
   }
@@ -26,13 +27,30 @@ afterAll(async () => {
 });
 
 describe('auth flow', () => {
-  it.runIf(() => dbAvailable)('registers, then blocks login until the email is verified', async () => {
+  it('registers, then blocks login until the email is verified', async ({ skip }) => {
+    if (!dbAvailable) skip();
     const email = `test.${Date.now()}@example.com`;
+    const property = await prisma.property.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000099' },
+      update: { status: 'ACTIVE', deletedAt: null },
+      create: {
+        id: '00000000-0000-0000-0000-000000000099',
+        name: 'Auth Test Property',
+        type: 'RESIDENTIAL_CONDOMINIUM',
+        status: 'ACTIVE',
+        addressLine1: '1 Test Way',
+        city: 'Test City',
+        state: 'CA',
+        postalCode: '90000',
+        country: 'USA',
+      },
+    });
 
     const registerRes = await request(app).post('/api/auth/register').send({
       firstName: 'Test',
       lastName: 'User',
       email,
+      propertyId: property.id,
       password: 'Str0ngPass!',
     });
     expect(registerRes.status).toBe(201);

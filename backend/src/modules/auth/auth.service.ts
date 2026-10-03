@@ -19,9 +19,9 @@ const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function publicUser(user: { id: string; email: string; firstName: string; lastName: string; role: Role; status: UserStatus; avatarUrl: string | null }) {
-  const { id, email, firstName, lastName, role, status, avatarUrl } = user;
-  return { id, email, firstName, lastName, role, status, avatarUrl };
+function publicUser(user: { id: string; email: string; firstName: string; lastName: string; role: Role; status: UserStatus; avatarUrl: string | null; propertyId: string | null }) {
+  const { id, email, firstName, lastName, role, status, avatarUrl, propertyId } = user;
+  return { id, email, firstName, lastName, role, status, avatarUrl, propertyId };
 }
 
 export async function register(input: {
@@ -29,11 +29,18 @@ export async function register(input: {
   lastName: string;
   email: string;
   phone?: string;
+  propertyId: string;
   password: string;
   role: 'TENANT' | 'VISITOR';
 }) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) throw conflict('An account with this email already exists.');
+
+  const property = await prisma.property.findFirst({
+    where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null },
+    select: { id: true },
+  });
+  if (!property) throw badRequest('Choose an active property.');
 
   const passwordHash = await hashPassword(input.password);
   const emailVerificationToken = generateOpaqueToken();
@@ -46,6 +53,7 @@ export async function register(input: {
       lastName: input.lastName,
       phone: input.phone,
       role: input.role,
+      propertyId: property.id,
       status: UserStatus.PENDING_VERIFICATION,
       emailVerificationToken,
       emailVerificationExpiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),

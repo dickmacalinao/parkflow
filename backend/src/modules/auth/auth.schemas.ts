@@ -12,6 +12,7 @@ export const registerSchema = z.object({
   lastName: z.string().trim().min(1, 'Last name is required.'),
   email: z.string().trim().email('Enter a valid email address.'),
   phone: z.string().trim().optional(),
+  propertyId: z.string().uuid(),
   password,
   // Public self-registration is for tenants/visitors only; staff roles are created via invitation.
   role: z.enum(['TENANT', 'VISITOR']).default('TENANT'),

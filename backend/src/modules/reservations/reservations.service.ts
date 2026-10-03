@@ -5,6 +5,7 @@ import { badRequest, conflict, forbidden, notFound } from '../../utils/errors.js
 import { generateOpaqueToken } from '../../utils/tokens.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { emailTemplates, sendEmail } from '../../lib/email.js';
+import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
 
 function generateCode(): string {
   return 'RES-' + generateOpaqueToken().slice(0, 8).toUpperCase();
@@ -30,6 +31,12 @@ export async function createReservation(
   input: { propertyId: string; slotId: string; vehicleId?: string; type: ReservationType; startAt: Date; endAt: Date; notes?: string },
   req: Request
 ) {
+  await assertRequestPropertyAccess(req, input.propertyId, false);
+  const property = await prisma.property.findFirst({
+    where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null },
+    select: { id: true },
+  });
+  if (!property) throw badRequest('Reservations are available only at active properties.');
   const slot = await prisma.parkingSlot.findFirst({
     where: { id: input.slotId, deletedAt: null, zone: { propertyId: input.propertyId } },
   });
@@ -99,10 +106,13 @@ export async function listReservations(filters: {
   q?: string;
   page: number;
   pageSize: number;
-}) {
+}, req: Request) {
+  const assignedPropertyId = req.user?.role === 'SUPER_ADMIN'
+    ? filters.propertyId
+    : await getAssignedPropertyId(req.user!.id, req.user!.role);
   const where = {
     deletedAt: null,
-    propertyId: filters.propertyId,
+    ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
     status: filters.status,
     requestedById: filters.requestedById,
     ...(filters.q
@@ -134,7 +144,7 @@ export async function listReservations(filters: {
   return { rows, total, page: filters.page, pageSize: filters.pageSize };
 }
 
-export async function getReservation(id: string) {
+export async function getReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findFirst({
     where: { id, deletedAt: null },
     include: {
@@ -146,6 +156,7 @@ export async function getReservation(id: string) {
     },
   });
   if (!reservation) throw notFound('Reservation not found.');
+  await assertRequestPropertyAccess(req, reservation.propertyId);
   return reservation;
 }
 
@@ -161,6 +172,7 @@ export async function decideReservation(
     include: { requestedBy: true, property: true, slot: true },
   });
   if (!reservation) throw notFound('Reservation not found.');
+  await assertRequestPropertyAccess(req, reservation.propertyId);
   if (reservation.status !== ReservationStatus.PENDING) {
     throw conflict(`Only pending reservations can be decided (current status: ${reservation.status}).`);
   }
@@ -197,6 +209,7 @@ export async function decideReservation(
 export async function cancelReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
+  await assertRequestPropertyAccess(req, reservation.propertyId);
 
   const isOwner = reservation.requestedById === req.user!.id;
   const isStaff = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
@@ -219,6 +232,7 @@ export async function checkIn(codeOrQr: string, req: Request) {
     where: { OR: [{ code: codeOrQr }, { qrCodeToken: codeOrQr }] },
   });
   if (!reservation) throw notFound('No reservation matches this code.');
+  await assertRequestPropertyAccess(req, reservation.propertyId);
   if (reservation.status !== ReservationStatus.APPROVED) {
     throw conflict(`Reservation must be APPROVED to check in (current status: ${reservation.status}).`);
   }
@@ -236,6 +250,7 @@ export async function checkIn(codeOrQr: string, req: Request) {
 export async function checkOut(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
+  await assertRequestPropertyAccess(req, reservation.propertyId);
   if (reservation.status !== ReservationStatus.CHECKED_IN) {
     throw conflict('Reservation must be CHECKED_IN to check out.');
   }

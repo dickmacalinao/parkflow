@@ -19,44 +19,6 @@ async function main() {
   const passwordHash = await hash(DEMO_PASSWORD);
   const now = new Date();
 
-  const [superAdmin, systemAdmin, owner, manager, attendant, tenant, visitor] = await Promise.all([
-    prisma.user.upsert({
-      where: { email: 'super.admin@parkflow.app' },
-      update: {},
-      create: { email: 'super.admin@parkflow.app', passwordHash, firstName: 'Sasha', lastName: 'Root', role: Role.SUPER_ADMIN, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'admin@parkflow.app' },
-      update: {},
-      create: { email: 'admin@parkflow.app', passwordHash, firstName: 'Avery', lastName: 'Admin', role: Role.SYSTEM_ADMIN, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'owner@parkflow.app' },
-      update: {},
-      create: { email: 'owner@parkflow.app', passwordHash, firstName: 'Owen', lastName: 'Harbor', role: Role.PROPERTY_OWNER, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'manager@parkflow.app' },
-      update: {},
-      create: { email: 'manager@parkflow.app', passwordHash, firstName: 'Mia', lastName: 'Manager', role: Role.PROPERTY_MANAGER, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'attendant@parkflow.app' },
-      update: {},
-      create: { email: 'attendant@parkflow.app', passwordHash, firstName: 'Alex', lastName: 'Gatekeeper', role: Role.PARKING_ATTENDANT, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'tenant@parkflow.app' },
-      update: {},
-      create: { email: 'tenant@parkflow.app', passwordHash, firstName: 'Tara', lastName: 'Tenant', role: Role.TENANT, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'visitor@parkflow.app' },
-      update: {},
-      create: { email: 'visitor@parkflow.app', passwordHash, firstName: 'Val', lastName: 'Visitor', role: Role.VISITOR, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-  ]);
-
   const property = await prisma.property.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {},
@@ -70,9 +32,48 @@ async function main() {
       state: 'CA',
       postalCode: '90001',
       country: 'USA',
-      ownerId: owner.id,
     },
   });
+
+  const [superAdmin, systemAdmin, owner, manager, attendant, tenant, visitor] = await Promise.all([
+    prisma.user.upsert({
+      where: { email: 'super.admin@parkflow.app' },
+      update: { propertyId: null },
+      create: { email: 'super.admin@parkflow.app', passwordHash, firstName: 'Sasha', lastName: 'Root', role: Role.SUPER_ADMIN, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'admin@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'admin@parkflow.app', passwordHash, firstName: 'Avery', lastName: 'Admin', role: Role.SYSTEM_ADMIN, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'owner@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'owner@parkflow.app', passwordHash, firstName: 'Owen', lastName: 'Harbor', role: Role.PROPERTY_OWNER, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'manager@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'manager@parkflow.app', passwordHash, firstName: 'Mia', lastName: 'Manager', role: Role.PROPERTY_MANAGER, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'attendant@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'attendant@parkflow.app', passwordHash, firstName: 'Alex', lastName: 'Gatekeeper', role: Role.PARKING_ATTENDANT, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'tenant@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'tenant@parkflow.app', passwordHash, firstName: 'Tara', lastName: 'Tenant', role: Role.TENANT, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+    prisma.user.upsert({
+      where: { email: 'visitor@parkflow.app' },
+      update: { propertyId: property.id },
+      create: { email: 'visitor@parkflow.app', passwordHash, firstName: 'Val', lastName: 'Visitor', role: Role.VISITOR, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+    }),
+  ]);
+
+  await prisma.property.update({ where: { id: property.id }, data: { ownerId: owner.id } });
 
   await prisma.propertyManager.upsert({
     where: { propertyId_userId: { propertyId: property.id, userId: manager.id } },

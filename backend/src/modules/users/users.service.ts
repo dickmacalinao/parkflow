@@ -1,12 +1,13 @@
 import { AuditAction, Role, UserStatus, type Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
-import { badRequest, notFound } from '../../utils/errors.js';
+import { badRequest, forbidden, notFound } from '../../utils/errors.js';
 import { hashPassword } from '../../utils/password.js';
 import { generateOpaqueToken } from '../../utils/tokens.js';
 import { emailTemplates, sendEmail } from '../../lib/email.js';
 import { env } from '../../config/env.js';
 import { recordAudit } from '../audit/audit.service.js';
 import type { Request } from 'express';
+import { assertPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
 
 const PUBLIC_FIELDS = {
   id: true,
@@ -15,6 +16,7 @@ const PUBLIC_FIELDS = {
   lastName: true,
   phone: true,
   avatarUrl: true,
+  propertyId: true,
   role: true,
   status: true,
   preferences: true,
@@ -42,9 +44,14 @@ export async function updateProfile(
   return user;
 }
 
-export async function listUsers(filters: { role?: Role; status?: UserStatus; q?: string; page: number; pageSize: number }) {
+export async function listUsers(
+  filters: { role?: Role; status?: UserStatus; q?: string; page: number; pageSize: number },
+  requestingUser: { id: string; role: Role },
+) {
+  const assignedPropertyId = await getAssignedPropertyId(requestingUser.id, requestingUser.role);
   const where = {
     deletedAt: null,
+    ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
     role: filters.role,
     status: filters.status,
     ...(filters.q
@@ -84,8 +91,17 @@ export async function inviteUser(
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) throw badRequest('A user with this email already exists.');
 
-  if (input.role === Role.PROPERTY_MANAGER && !input.propertyId) {
-    throw badRequest('propertyId is required when inviting a Property Manager.');
+  if (input.role === Role.SUPER_ADMIN && req.user?.role !== Role.SUPER_ADMIN) {
+    throw badRequest('Only a Super Admin can invite another Super Admin.');
+  }
+
+  const property = input.propertyId
+    ? await prisma.property.findFirst({ where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null }, select: { id: true } })
+    : null;
+  if (input.role !== Role.SUPER_ADMIN && !property) throw badRequest('Choose an active property for this user.');
+  if (input.role === Role.SUPER_ADMIN && property) throw badRequest('Super Admin accounts cannot be assigned to a property.');
+  if (req.user?.role !== Role.SUPER_ADMIN && property?.id !== (await getAssignedPropertyId(req.user!.id, req.user!.role))) {
+    throw forbidden('You can only assign users to your assigned property.');
   }
 
   const temporaryPassword = generateOpaqueToken();
@@ -98,6 +114,7 @@ export async function inviteUser(
       firstName: input.firstName,
       lastName: input.lastName,
       role: input.role,
+      propertyId: property?.id ?? null,
       status: UserStatus.PENDING_VERIFICATION,
       passwordHash,
       emailVerificationToken,
@@ -125,6 +142,12 @@ export async function inviteUser(
 }
 
 export async function updateUserStatus(targetUserId: string, status: UserStatus, req: Request) {
+  const target = await prisma.user.findFirst({ where: { id: targetUserId, deletedAt: null }, select: { propertyId: true } });
+  if (!target) throw notFound('User not found.');
+  if (req.user?.role !== Role.SUPER_ADMIN) {
+    if (!target.propertyId) throw forbidden();
+    await assertPropertyAccess(req.user!.id, req.user!.role, target.propertyId);
+  }
   const user = await prisma.user.update({ where: { id: targetUserId }, data: { status, updatedBy: req.user?.id } });
   await recordAudit({
     req,
@@ -134,6 +157,55 @@ export async function updateUserStatus(targetUserId: string, status: UserStatus,
     description: `Status changed to ${status}`,
   });
   return { id: user.id, status: user.status };
+}
+
+export async function updateUserProperty(targetUserId: string, propertyId: string | null, req: Request) {
+  const target = await prisma.user.findFirst({
+    where: { id: targetUserId, deletedAt: null },
+    select: { id: true, role: true, propertyId: true },
+  });
+  if (!target) throw notFound('User not found.');
+  if (target.role === Role.SUPER_ADMIN) {
+    if (propertyId !== null) throw badRequest('Super Admin accounts cannot be assigned to a property.');
+  } else {
+    if (!propertyId) throw badRequest('A property is required for this user.');
+    const property = await prisma.property.findFirst({
+      where: { id: propertyId, status: 'ACTIVE', deletedAt: null },
+      select: { id: true },
+    });
+    if (!property) throw badRequest('Choose an active property.');
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (target.role === Role.PROPERTY_OWNER && target.propertyId) {
+      await tx.property.updateMany({ where: { id: target.propertyId, ownerId: targetUserId }, data: { ownerId: null } });
+    }
+    if (target.role === Role.PROPERTY_MANAGER) {
+      await tx.propertyManager.deleteMany({ where: { userId: targetUserId, propertyId: { not: propertyId ?? '' } } });
+    }
+    if (target.role === Role.PROPERTY_OWNER && propertyId) {
+      const property = await tx.property.findUnique({ where: { id: propertyId }, select: { ownerId: true } });
+      if (property?.ownerId && property.ownerId !== targetUserId) throw badRequest('That property already has a different owner.');
+      await tx.property.update({ where: { id: propertyId }, data: { ownerId: targetUserId } });
+    }
+    if (target.role === Role.PROPERTY_MANAGER && propertyId) {
+      await tx.propertyManager.upsert({
+        where: { propertyId_userId: { propertyId, userId: targetUserId } },
+        update: {},
+        create: { propertyId, userId: targetUserId },
+      });
+    }
+    await tx.user.update({ where: { id: targetUserId }, data: { propertyId, updatedBy: req.user?.id } });
+  });
+
+  await recordAudit({
+    req,
+    action: AuditAction.UPDATE,
+    entityType: 'User',
+    entityId: targetUserId,
+    description: propertyId ? `Assigned to property ${propertyId}` : 'Property assignment removed for Super Admin',
+  });
+  return { id: targetUserId, propertyId };
 }
 
 /** Soft delete: keeps the row (and its history/FKs) but excludes it from normal queries. */

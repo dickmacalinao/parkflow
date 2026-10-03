@@ -35,7 +35,7 @@ router.get(
     const isStaff = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
     const filters = req.query as unknown as z.infer<typeof listVisitorPassesQuerySchema>;
     const scoped = isStaff ? filters : { ...filters, hostUserId: req.user!.id };
-    res.json(await visitorPassesService.listVisitorPasses(scoped));
+    res.json(await visitorPassesService.listVisitorPasses(scoped, req));
   })
 );
 

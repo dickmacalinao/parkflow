@@ -18,6 +18,7 @@ export const registerSchema = z
     firstName: z.string().trim().min(1, 'First name is required.'),
     lastName: z.string().trim().min(1, 'Last name is required.'),
     email: z.string().email('Enter a valid email.'),
+    propertyId: z.string().uuid('Choose your property.'),
     phone: z.string().trim().optional(),
     password,
     confirmPassword: z.string(),

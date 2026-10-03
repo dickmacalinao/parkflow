@@ -29,12 +29,13 @@ router.use(authRateLimiter);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [firstName, lastName, email, password]
+ *             required: [firstName, lastName, email, propertyId, password]
  *             properties:
  *               firstName: { type: string, example: "Amara" }
  *               lastName: { type: string, example: "Okafor" }
  *               email: { type: string, example: "amara@example.com" }
  *               phone: { type: string, example: "+15551234567" }
+ *               propertyId: { type: string, format: uuid, description: Active property assignment }
  *               password: { type: string, example: "Str0ngPass!" }
  *               role: { type: string, enum: [TENANT, VISITOR], default: TENANT }
  *     responses:

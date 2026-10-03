@@ -14,11 +14,21 @@ export const inviteUserSchema = z.object({
   lastName: z.string().trim().min(1),
   email: z.string().trim().email(),
   role: z.nativeEnum(Role),
-  propertyId: z.string().uuid().optional(), // required when inviting a PROPERTY_MANAGER
+  propertyId: z.string().uuid().optional(),
+}).superRefine((data, ctx) => {
+  if (data.role === Role.SUPER_ADMIN && data.propertyId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['propertyId'], message: 'Super Admin accounts cannot be assigned to a property.' });
+  } else if (data.role !== Role.SUPER_ADMIN && !data.propertyId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['propertyId'], message: 'A property is required for this role.' });
+  }
 });
 
 export const updateUserStatusSchema = z.object({
   status: z.nativeEnum(UserStatus),
+});
+
+export const updateUserPropertySchema = z.object({
+  propertyId: z.string().uuid().nullable(),
 });
 
 export const listUsersQuerySchema = z.object({

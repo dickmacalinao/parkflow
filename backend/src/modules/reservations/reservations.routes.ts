@@ -53,7 +53,7 @@ router.get(
     const filters = req.query as unknown as z.infer<typeof listReservationsQuerySchema>;
     // Non-staff users can only ever see their own reservations, regardless of what they pass in requestedById.
     const scoped = isStaff ? filters : { ...filters, requestedById: req.user!.id };
-    res.json(await reservationsService.listReservations(scoped));
+    res.json(await reservationsService.listReservations(scoped, req));
   })
 );
 
@@ -62,7 +62,7 @@ router.get(
   requireAuth,
   validate({ params: idParam }),
   asyncHandler(async (req, res) => {
-    const reservation = await reservationsService.getReservation(req.params.id);
+    const reservation = await reservationsService.getReservation(req.params.id, req);
     const isStaff = (STAFF_ROLES as readonly string[]).includes(req.user!.role);
     if (!isStaff && reservation.requestedById !== req.user!.id) {
       return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Reservation not found.' } });

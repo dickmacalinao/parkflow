@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncHandler } from '../../middleware/asyncHandler.js';
 import { forbidden } from '../../utils/errors.js';
+import { assertPropertyAccess } from './propertyAccess.js';
 import {
   createPropertySchema,
   decidePropertySchema,
@@ -46,11 +47,21 @@ router.post(
  *       200: { description: Paginated property list }
  */
 router.get(
+  '/available',
+  asyncHandler(async (_req, res) => {
+    res.json(await propertiesService.listAvailableProperties());
+  })
+);
+
+router.get(
   '/',
   requireAuth,
   validate({ query: listPropertiesQuerySchema }),
   asyncHandler(async (req, res) => {
-    res.json(await propertiesService.listProperties(req.query as unknown as z.infer<typeof listPropertiesQuerySchema>));
+    res.json(await propertiesService.listProperties(
+      req.query as unknown as z.infer<typeof listPropertiesQuerySchema>,
+      req.user!,
+    ));
   })
 );
 
@@ -70,7 +81,7 @@ router.get(
   requireAuth,
   validate({ params: idParam }),
   asyncHandler(async (req, res) => {
-    res.json(await propertiesService.getProperty(req.params.id));
+    res.json(await propertiesService.getProperty(req.params.id, req.user!));
   })
 );
 
@@ -89,6 +100,7 @@ router.patch(
   requireAuth,
   validate({ params: idParam, body: updatePropertySchema }),
   asyncHandler(async (req, res) => {
+    await assertPropertyAccess(req.user!.id, req.user!.role, req.params.id);
     const allowed =
       ['SUPER_ADMIN', 'SYSTEM_ADMIN'].includes(req.user!.role) ||
       (await propertiesService.userCanManageProperty(req.user!.id, req.user!.role, req.params.id));
@@ -113,6 +125,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
   validate({ params: idParam, body: decidePropertySchema }),
   asyncHandler(async (req, res) => {
+    await assertPropertyAccess(req.user!.id, req.user!.role, req.params.id);
     res.json(await propertiesService.decideProperty(req.params.id, req.body.status, req.body.reason, req));
   })
 );
@@ -133,6 +146,7 @@ router.delete(
   requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
   validate({ params: idParam }),
   asyncHandler(async (req, res) => {
+    await assertPropertyAccess(req.user!.id, req.user!.role, req.params.id);
     await propertiesService.softDeleteProperty(req.params.id, req);
     res.status(204).send();
   })
@@ -154,6 +168,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_OWNER'),
   validate({ params: idParam, body: z.object({ userId: z.string().uuid(), canApprove: z.boolean().default(true) }) }),
   asyncHandler(async (req, res) => {
+    await assertPropertyAccess(req.user!.id, req.user!.role, req.params.id);
     res.json(await propertiesService.assignManager(req.params.id, req.body.userId, req.body.canApprove, req));
   })
 );

@@ -58,7 +58,7 @@ router.get(
   requireAuth,
   validate({ query: z.object({ propertyId: z.string().uuid() }) }),
   asyncHandler(async (req, res) => {
-    res.json(await parkingService.listZones(req.query.propertyId as string));
+    res.json(await parkingService.listZones(req.query.propertyId as string, req));
   })
 );
 
@@ -138,7 +138,7 @@ router.get(
   requireAuth,
   validate({ query: listSlotsQuerySchema }),
   asyncHandler(async (req, res) => {
-    res.json(await parkingService.listSlots(req.query as unknown as z.infer<typeof listSlotsQuerySchema>));
+    res.json(await parkingService.listSlots(req.query as unknown as z.infer<typeof listSlotsQuerySchema>, req));
   })
 );
 

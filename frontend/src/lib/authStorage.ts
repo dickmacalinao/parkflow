@@ -4,6 +4,7 @@ export interface StoredUser {
   firstName: string;
   lastName: string;
   phone?: string | null;
+  propertyId?: string | null;
   role: string;
   status: string;
   avatarUrl?: string | null;
