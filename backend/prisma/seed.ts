@@ -35,16 +35,11 @@ async function main() {
     },
   });
 
-  const [superAdmin, systemAdmin, owner, manager, attendant, tenant, visitor] = await Promise.all([
+  const [superAdmin, owner, manager, attendant, tenant, visitor] = await Promise.all([
     prisma.user.upsert({
       where: { email: 'super.admin@parkflow.app' },
       update: { propertyId: null },
       create: { email: 'super.admin@parkflow.app', passwordHash, firstName: 'Sasha', lastName: 'Root', role: Role.SUPER_ADMIN, status: UserStatus.ACTIVE, emailVerifiedAt: now },
-    }),
-    prisma.user.upsert({
-      where: { email: 'admin@parkflow.app' },
-      update: { propertyId: property.id },
-      create: { email: 'admin@parkflow.app', passwordHash, firstName: 'Avery', lastName: 'Admin', role: Role.SYSTEM_ADMIN, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
     }),
     prisma.user.upsert({
       where: { email: 'owner@parkflow.app' },
@@ -128,7 +123,7 @@ async function main() {
 
   console.log('Seed complete. Demo accounts (password for all: "Passw0rd!"):');
   console.table(
-    [superAdmin, systemAdmin, owner, manager, attendant, tenant, visitor].map((u) => ({ role: u.role, email: u.email }))
+    [superAdmin, owner, manager, attendant, tenant, visitor].map((u) => ({ role: u.role, email: u.email }))
   );
 }
 

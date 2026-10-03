@@ -32,7 +32,7 @@ router.get(
   requireAuth,
   validate({ query: listVisitorPassesQuerySchema }),
   asyncHandler(async (req, res) => {
-    const isStaff = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
+    const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
     const filters = req.query as unknown as z.infer<typeof listVisitorPassesQuerySchema>;
     const scoped = isStaff ? filters : { ...filters, hostUserId: req.user!.id };
     res.json(await visitorPassesService.listVisitorPasses(scoped, req));
@@ -53,7 +53,7 @@ router.get(
 router.post(
   '/validate',
   requireAuth,
-  requireRole('PARKING_ATTENDANT', 'SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER'),
+  requireRole('PARKING_ATTENDANT', 'SUPER_ADMIN', 'PROPERTY_MANAGER'),
   validate({ body: z.object({ qrCodeToken: z.string().min(1) }) }),
   asyncHandler(async (req, res) => {
     res.json(await visitorPassesService.validateVisitorPass(req.body.qrCodeToken, req));

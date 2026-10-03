@@ -131,9 +131,8 @@ they depend on data, not just role.
 | Role | Typical permissions |
 |---|---|
 | SUPER_ADMIN | Everything, including deleting users |
-| SYSTEM_ADMIN | Manage users/properties/approvals, view audit log, cannot hard-delete |
 | PROPERTY_OWNER | Manage own property's inventory/rates, approve reservations, view revenue |
-| PROPERTY_MANAGER | Approve/reject reservations and visitor passes for assigned properties |
+| PROPERTY_MANAGER | Manage assigned property, its users, parking inventory, reservations, and visitor passes |
 | PARKING_ATTENDANT | Check-in/check-out, validate visitor passes, block/unblock bays |
 | TENANT | Request reservations, register vehicles, issue visitor passes |
 | VISITOR | Hold a visitor pass; no login required to be parked, but can self-register to track their own bookings |

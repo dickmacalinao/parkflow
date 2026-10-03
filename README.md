@@ -46,7 +46,6 @@ Then log in at http://localhost:5173/login with any seeded account (password `Pa
 | Email | Role |
 |---|---|
 | super.admin@parkflow.app | Super Admin |
-| admin@parkflow.app | System Admin |
 | owner@parkflow.app | Property Owner |
 | manager@parkflow.app | Property Manager |
 | attendant@parkflow.app | Parking Attendant |

@@ -45,24 +45,24 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 |---|---|---|---|
 | GET | `/me` | Bearer | Current user's profile |
 | PATCH | `/me` | Bearer | Update own profile/preferences/avatar URL |
-| GET | `/` | Admin | Paginated user list, scoped to assigned property for System Admin |
-| POST | `/invite` | Admin | Invite a Property Manager/Owner (or any role) |
+| GET | `/` | Super Admin, Property Manager | Paginated user list; manager results are scoped to assigned property |
+| POST | `/invite` | Super Admin, Property Manager | Invite a user globally as Super Admin or into the manager's assigned property |
 | PATCH | `/:id/property` | Super Admin | Assign or reassign a user to an active property (Super Admin remains unassigned) |
-| PATCH | `/:id/status` | Admin | Activate/suspend/deactivate |
+| PATCH | `/:id/status` | Super Admin, Property Manager | Activate/suspend/deactivate within permitted scope |
 | DELETE | `/:id` | Super Admin | Soft-delete |
 
 ## Properties (`/api/properties`) — ✅ fully implemented
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/` | Admin, Owner | Register a property (status: PENDING_APPROVAL) |
+| POST | `/` | Super Admin | Register a property (status: PENDING_APPROVAL) |
 | GET | `/` | Any authenticated | List assigned property; Super Admin can list all |
 | GET | `/available` | none | List active properties for account registration |
 | GET | `/:id` | Any authenticated | Assigned property detail; Super Admin can access all |
-| PATCH | `/:id` | Admin or assigned manager/owner | Update |
-| POST | `/:id/decision` | Admin | Approve or reject a pending property |
-| DELETE | `/:id` | Admin | Soft-delete |
-| POST | `/:id/managers` | Admin, Owner | Assign a Property Manager, with/without approval rights |
+| PATCH | `/:id` | Super Admin or assigned manager/owner | Update |
+| POST | `/:id/decision` | Super Admin | Approve or reject a pending property |
+| DELETE | `/:id` | Super Admin | Soft-delete |
+| POST | `/:id/managers` | Super Admin, assigned Owner/Manager | Assign a Property Manager, with/without approval rights |
 
 ## Parking (`/api/parking`) — ✅ fully implemented
 

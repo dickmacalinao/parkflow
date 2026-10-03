@@ -25,18 +25,13 @@ const NAV: NavItem[] = [
     to: "/properties",
     label: "Properties",
     icon: Building2,
-    roles: ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_MANAGER"],
+    roles: ["SUPER_ADMIN", "PROPERTY_MANAGER"],
   },
   {
     to: "/parking",
     label: "Parking Slots",
     icon: ParkingSquare,
-    roles: [
-      "SUPER_ADMIN",
-      "SYSTEM_ADMIN",
-      "PROPERTY_OWNER",
-      "PROPERTY_MANAGER",
-    ],
+    roles: ["SUPER_ADMIN", "PROPERTY_OWNER", "PROPERTY_MANAGER"],
   },
   { to: "/reservations", label: "Reservations", icon: CalendarCheck },
   // { to: "/visitors", label: "Visitor Passes", icon: Ticket },
@@ -44,13 +39,13 @@ const NAV: NavItem[] = [
     to: "/admin/users",
     label: "Users",
     icon: Users,
-    roles: ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_MANAGER"],
+    roles: ["SUPER_ADMIN", "PROPERTY_MANAGER"],
   },
   {
     to: "/admin/audit-logs",
     label: "Audit Log",
     icon: ShieldCheck,
-    roles: ["SUPER_ADMIN", "SYSTEM_ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
 ];
 

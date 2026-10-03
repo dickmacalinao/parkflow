@@ -34,9 +34,8 @@ export function PropertiesListPage() {
   const { data: properties, isLoading } = useProperties({ status });
   const decide = useDecideProperty();
   const deleteProperty = useDeleteProperty();
-  const isAdmin = user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
-  const canRegister =
-    user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
+  const isAdmin = user?.role === "SUPER_ADMIN";
+  const canRegister = user?.role === "SUPER_ADMIN";
   const showActions =
     isAdmin ||
     user?.role === "PROPERTY_OWNER" ||

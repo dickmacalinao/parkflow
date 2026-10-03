@@ -86,7 +86,7 @@ export async function updateProperty(id: string, data: Record<string, unknown>, 
   return property;
 }
 
-/** System Admin approves or rejects a pending property/owner application. */
+/** Super Admin approves or rejects a pending property/owner application. */
 export async function decideProperty(id: string, status: PropertyStatus.ACTIVE | PropertyStatus.REJECTED, reason: string | undefined, req: Request) {
   const property = await prisma.property.update({
     where: { id },
@@ -134,7 +134,6 @@ export async function userCanManageProperty(userId: string, role: string, proper
   if (role === 'SUPER_ADMIN') return true;
   const assignedPropertyId = await getAssignedPropertyId(userId, role as Role);
   if (assignedPropertyId !== propertyId) return false;
-  if (role === 'SYSTEM_ADMIN') return true;
   const property = await prisma.property.findFirst({ where: { id: propertyId, deletedAt: null }, select: { ownerId: true } });
   if (property?.ownerId === userId) return true;
   const managerLink = await prisma.propertyManager.findUnique({ where: { propertyId_userId: { propertyId, userId } } });

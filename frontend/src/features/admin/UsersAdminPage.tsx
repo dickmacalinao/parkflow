@@ -22,7 +22,6 @@ import type { AdminUser } from "./admin.hooks";
 
 const ROLES = [
   "SUPER_ADMIN",
-  "SYSTEM_ADMIN",
   "PROPERTY_MANAGER",
   "PROPERTY_OWNER",
   "TENANT",
@@ -49,7 +48,7 @@ export function UsersAdminPage() {
   });
   const { data: properties } = useProperties();
   const canManageUsers =
-    user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
+    user && ["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(user.role);
   const updateStatus = useUpdateUserStatus();
   const invite = useInviteUser();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -223,7 +222,7 @@ export function UsersAdminPage() {
       <Dialog
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        title="Invite a Property Manager or Owner"
+        title="Invite user"
       >
         <form
           id="invite-form"

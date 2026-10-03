@@ -21,7 +21,7 @@ const listQuerySchema = z.object({
  * @openapi
  * /api/audit-logs:
  *   get:
- *     summary: List audit trail entries (Super Admin / System Admin only)
+ *     summary: List audit trail entries (Super Admin only)
  *     tags: [Audit]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -30,7 +30,7 @@ const listQuerySchema = z.object({
 router.get(
   '/',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
+  requireRole('SUPER_ADMIN'),
   validate({ query: listQuerySchema }),
   asyncHandler(async (req, res) => {
     const result = await listAuditLogs(req.query as unknown as z.infer<typeof listQuerySchema>);

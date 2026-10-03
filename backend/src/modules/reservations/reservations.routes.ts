@@ -12,7 +12,7 @@ import * as reservationsService from './reservations.service.js';
 
 const router = Router();
 const idParam = z.object({ id: z.string().uuid() });
-const STAFF_ROLES = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'] as const;
+const STAFF_ROLES = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'] as const;
 
 /**
  * @openapi

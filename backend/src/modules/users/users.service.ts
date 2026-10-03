@@ -81,7 +81,7 @@ export async function listUsers(
 }
 
 /**
- * System Admin invites a Property Manager or Property Owner (or a Super Admin invites any role).
+ * Property Managers invite users to their assigned property; Super Admin can invite globally.
  * Creates the account in PENDING_VERIFICATION status with a random unusable password and sends
  * a "set your password" link that reuses the email-verification token flow.
  */
@@ -145,6 +145,9 @@ export async function inviteUser(
 export async function updateUserStatus(targetUserId: string, status: UserStatus, req: Request) {
   const target = await prisma.user.findFirst({ where: { id: targetUserId, deletedAt: null }, select: { propertyId: true } });
   if (!target) throw notFound('User not found.');
+  if (req.user?.role === Role.PROPERTY_MANAGER && targetUserId === req.user.id) {
+    throw forbidden('Property Managers cannot change their own account status.');
+  }
   if (req.user?.role !== Role.SUPER_ADMIN) {
     if (!target.propertyId) throw forbidden();
     await assertPropertyAccess(req.user!.id, req.user!.role, target.propertyId);

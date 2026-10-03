@@ -16,7 +16,7 @@ import * as parkingService from './parking.service.js';
 
 const router = Router();
 const idParam = z.object({ id: z.string().uuid() });
-const MANAGE_ROLES = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_OWNER', 'PROPERTY_MANAGER'] as const;
+const MANAGE_ROLES = ['SUPER_ADMIN', 'PROPERTY_OWNER', 'PROPERTY_MANAGER'] as const;
 
 /**
  * @openapi

@@ -212,7 +212,7 @@ export async function cancelReservation(id: string, req: Request) {
   await assertRequestPropertyAccess(req, reservation.propertyId);
 
   const isOwner = reservation.requestedById === req.user!.id;
-  const isStaff = ['SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
+  const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
   if (!isOwner && !isStaff) throw forbidden();
 
   if ([ReservationStatus.CANCELLED, ReservationStatus.COMPLETED, ReservationStatus.CHECKED_OUT].includes(reservation.status)) {

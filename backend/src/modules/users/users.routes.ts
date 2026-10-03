@@ -51,7 +51,7 @@ router.patch(
  * @openapi
  * /api/users:
  *   get:
- *     summary: List users (admin)
+ *     summary: List users in the assigned property, or all users for Super Admin
  *     tags: [Users]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -60,7 +60,7 @@ router.patch(
 router.get(
   '/',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_MANAGER'),
+  requireRole('SUPER_ADMIN', 'PROPERTY_MANAGER'),
   validate({ query: listUsersQuerySchema }),
   asyncHandler(async (req, res) => {
     res.json(await usersService.listUsers(
@@ -74,7 +74,7 @@ router.get(
  * @openapi
  * /api/users/invite:
  *   post:
- *     summary: Invite a Property Manager or Property Owner (System/Super Admin)
+ *     summary: Invite a user to the current property or globally as Super Admin
  *     tags: [Users]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -83,7 +83,7 @@ router.get(
 router.post(
   '/invite',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
+  requireRole('SUPER_ADMIN', 'PROPERTY_MANAGER'),
   validate({ body: inviteUserSchema }),
   asyncHandler(async (req, res) => {
     res.status(201).json(await usersService.inviteUser(req.body, req));
@@ -113,7 +113,7 @@ router.patch(
 router.patch(
   '/:id/status',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
+  requireRole('SUPER_ADMIN', 'PROPERTY_MANAGER'),
   validate({ body: updateUserStatusSchema, params: z.object({ id: z.string().uuid() }) }),
   asyncHandler(async (req, res) => {
     res.json(await usersService.updateUserStatus(req.params.id, req.body.status, req));

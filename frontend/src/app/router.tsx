@@ -20,15 +20,10 @@ import { ProfilePage } from "../features/profile/ProfilePage";
 import { UnauthorizedPage } from "./UnauthorizedPage";
 import { NotFoundPage } from "./NotFoundPage";
 
-const STAFF_ROLES = [
-  "SUPER_ADMIN",
-  "SYSTEM_ADMIN",
-  "PROPERTY_OWNER",
-  "PROPERTY_MANAGER",
-];
-const PROPERTY_ROLES = ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_MANAGER"];
-const ADMIN_ROLES = ["SUPER_ADMIN", "SYSTEM_ADMIN"];
-const USER_ROLES = [...ADMIN_ROLES, "PROPERTY_MANAGER"];
+const STAFF_ROLES = ["SUPER_ADMIN", "PROPERTY_OWNER", "PROPERTY_MANAGER"];
+const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
+const ADMIN_ROLES = ["SUPER_ADMIN"];
+const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/dashboard" replace /> },

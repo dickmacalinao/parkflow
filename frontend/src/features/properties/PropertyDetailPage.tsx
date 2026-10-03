@@ -27,7 +27,7 @@ export function PropertyDetailPage() {
   if (isLoading) return <Spinner />;
   if (!property) return <p>Property not found.</p>;
 
-  const isAdmin = user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
+  const isAdmin = user?.role === "SUPER_ADMIN";
   const canEdit =
     isAdmin ||
     property.owner?.id === user?.id ||
