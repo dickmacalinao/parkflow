@@ -12,6 +12,15 @@ describe('RBAC', () => {
     expect(res.status).toBe(403);
   });
 
+  it('rejects a PROPERTY_OWNER token from registering a property', async () => {
+    const token = signAccessToken({ sub: 'fake-owner-id', role: 'PROPERTY_OWNER' });
+    const res = await request(app)
+      .post('/api/properties')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+    expect(res.status).toBe(403);
+  });
+
   it('rejects a request with no token at all', async () => {
     const res = await request(app).get('/api/users');
     expect(res.status).toBe(401);

@@ -26,6 +26,7 @@ const STAFF_ROLES = [
   "PROPERTY_OWNER",
   "PROPERTY_MANAGER",
 ];
+const PROPERTY_ROLES = ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN", "SYSTEM_ADMIN"];
 
 export const router = createBrowserRouter([
@@ -51,12 +52,15 @@ export const router = createBrowserRouter([
           { path: "/visitors", element: <VisitorPassesPage /> },
 
           {
-            element: <RoleGuard roles={STAFF_ROLES} />,
+            element: <RoleGuard roles={PROPERTY_ROLES} />,
             children: [
               { path: "/properties", element: <PropertiesListPage /> },
               { path: "/properties/:id", element: <PropertyDetailPage /> },
-              { path: "/parking", element: <ParkingSlotsPage /> },
             ],
+          },
+          {
+            element: <RoleGuard roles={STAFF_ROLES} />,
+            children: [{ path: "/parking", element: <ParkingSlotsPage /> }],
           },
           {
             element: <RoleGuard roles={ADMIN_ROLES} />,

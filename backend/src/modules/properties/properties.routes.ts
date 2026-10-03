@@ -29,7 +29,7 @@ const idParam = z.object({ id: z.string().uuid() });
 router.post(
   '/',
   requireAuth,
-  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN', 'PROPERTY_OWNER'),
+  requireRole('SUPER_ADMIN', 'SYSTEM_ADMIN'),
   validate({ body: createPropertySchema }),
   asyncHandler(async (req, res) => {
     res.status(201).json(await propertiesService.createProperty(req.body, req));

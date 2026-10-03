@@ -36,8 +36,7 @@ export function PropertiesListPage() {
   const deleteProperty = useDeleteProperty();
   const isAdmin = user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
   const canRegister =
-    user &&
-    ["SUPER_ADMIN", "SYSTEM_ADMIN", "PROPERTY_OWNER"].includes(user.role);
+    user && ["SUPER_ADMIN", "SYSTEM_ADMIN"].includes(user.role);
   const showActions =
     isAdmin ||
     user?.role === "PROPERTY_OWNER" ||
