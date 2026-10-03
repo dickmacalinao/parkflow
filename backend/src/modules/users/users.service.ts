@@ -148,8 +148,11 @@ export async function inviteUser(
     throw badRequest('Only a Super Admin can invite another Super Admin.');
   }
 
-  const property = input.propertyId
-    ? await prisma.property.findFirst({ where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null }, select: { id: true, type: true } })
+  const assignedPropertyId = req.user?.role === Role.SUPER_ADMIN
+    ? input.propertyId
+    : await getAssignedPropertyId(req.user!.id, req.user!.role);
+  const property = assignedPropertyId
+    ? await prisma.property.findFirst({ where: { id: assignedPropertyId, status: 'ACTIVE', deletedAt: null }, select: { id: true, type: true } })
     : null;
   if (input.role !== Role.SUPER_ADMIN && !property) throw badRequest('Choose an active property for this user.');
   if (input.role === Role.SUPER_ADMIN && property) throw badRequest('Super Admin accounts cannot be assigned to a property.');
@@ -163,10 +166,6 @@ export async function inviteUser(
   if (!needsCondominiumAddress && addressFields.some(Boolean)) {
     throw badRequest('Building, floor, and unit details are only accepted for condominium tenants and owners.');
   }
-  if (req.user?.role !== Role.SUPER_ADMIN && property?.id !== (await getAssignedPropertyId(req.user!.id, req.user!.role))) {
-    throw forbidden('You can only assign users to your assigned property.');
-  }
-
   const temporaryPassword = generateOpaqueToken();
   const passwordHash = await hashPassword(temporaryPassword);
   const emailVerificationToken = generateOpaqueToken();
@@ -189,13 +188,13 @@ export async function inviteUser(
     },
   });
 
-  if (input.role === Role.PROPERTY_MANAGER && input.propertyId) {
+  if (input.role === Role.PROPERTY_MANAGER && property) {
     await prisma.propertyManager.create({
-      data: { propertyId: input.propertyId, userId: user.id },
+      data: { propertyId: property.id, userId: user.id },
     });
   }
-  if (input.role === Role.PROPERTY_OWNER && input.propertyId) {
-    await prisma.property.update({ where: { id: input.propertyId }, data: { ownerId: user.id } });
+  if (input.role === Role.PROPERTY_OWNER && property) {
+    await prisma.property.update({ where: { id: property.id }, data: { ownerId: user.id } });
   }
 
   const link = `${env.CLIENT_URL}/accept-invite?token=${emailVerificationToken}`;

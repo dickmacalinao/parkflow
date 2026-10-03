@@ -69,9 +69,9 @@ export function UsersAdminPage() {
   });
   const selectedRole = watch("role");
   const selectedPropertyId = watch("propertyId");
-  const selectedProperty = properties?.find(
-    (property) => property.id === selectedPropertyId,
-  );
+  const selectedProperty = isSuperAdmin
+    ? properties?.find((property) => property.id === selectedPropertyId)
+    : properties?.find((property) => property.id === user?.propertyId);
   const needsCondoAddress =
     ["TENANT", "PROPERTY_OWNER"].includes(selectedRole ?? "") &&
     selectedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
@@ -103,7 +103,9 @@ export function UsersAdminPage() {
     setError(null);
     try {
       await invite.mutateAsync(
-        data.role === "SUPER_ADMIN" ? { ...data, propertyId: undefined } : data,
+        isSuperAdmin && data.role !== "SUPER_ADMIN"
+          ? data
+          : { ...data, propertyId: undefined },
       );
       reset();
       setInviteOpen(false);
@@ -285,7 +287,7 @@ export function UsersAdminPage() {
               ))}
             </Select>
           </div>
-          {selectedRole !== "SUPER_ADMIN" && (
+          {isSuperAdmin && selectedRole !== "SUPER_ADMIN" && (
             <div>
               <Label htmlFor="propertyId">Assigned property</Label>
               <Select

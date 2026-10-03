@@ -24,8 +24,6 @@ export const inviteUserSchema = z.object({
 }).superRefine((data, ctx) => {
   if (data.role === Role.SUPER_ADMIN && data.propertyId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['propertyId'], message: 'Super Admin accounts cannot be assigned to a property.' });
-  } else if (data.role !== Role.SUPER_ADMIN && !data.propertyId) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['propertyId'], message: 'A property is required for this role.' });
   }
 });
 
