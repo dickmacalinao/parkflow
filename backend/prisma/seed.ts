@@ -58,8 +58,8 @@ async function main() {
     }),
     prisma.user.upsert({
       where: { email: 'tenant@parkflow.app' },
-      update: { propertyId: property.id },
-      create: { email: 'tenant@parkflow.app', passwordHash, firstName: 'Tara', lastName: 'Tenant', role: Role.TENANT, propertyId: property.id, status: UserStatus.ACTIVE, emailVerifiedAt: now },
+      update: { propertyId: property.id, buildingNo: 'A', floorNo: '12', unitNo: '1203' },
+      create: { email: 'tenant@parkflow.app', passwordHash, firstName: 'Tara', lastName: 'Tenant', role: Role.TENANT, propertyId: property.id, buildingNo: 'A', floorNo: '12', unitNo: '1203', status: UserStatus.ACTIVE, emailVerifiedAt: now },
     }),
     prisma.user.upsert({
       where: { email: 'visitor@parkflow.app' },

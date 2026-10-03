@@ -19,9 +19,21 @@ const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function publicUser(user: { id: string; email: string; firstName: string; lastName: string; role: Role; status: UserStatus; avatarUrl: string | null; propertyId: string | null }) {
-  const { id, email, firstName, lastName, role, status, avatarUrl, propertyId } = user;
-  return { id, email, firstName, lastName, role, status, avatarUrl, propertyId };
+function publicUser(user: {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  status: UserStatus;
+  avatarUrl: string | null;
+  propertyId: string | null;
+  buildingNo: string | null;
+  floorNo: string | null;
+  unitNo: string | null;
+}) {
+  const { id, email, firstName, lastName, role, status, avatarUrl, propertyId, buildingNo, floorNo, unitNo } = user;
+  return { id, email, firstName, lastName, role, status, avatarUrl, propertyId, buildingNo, floorNo, unitNo };
 }
 
 export async function register(input: {

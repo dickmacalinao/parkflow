@@ -63,8 +63,18 @@ export function UsersAdminPage() {
     reset,
     watch,
     formState: { isSubmitting },
-  } = useForm<InviteUserInput>({ defaultValues: { role: "TENANT" } });
+  } = useForm<InviteUserInput>({
+    defaultValues: { role: "TENANT" },
+    shouldUnregister: true,
+  });
   const selectedRole = watch("role");
+  const selectedPropertyId = watch("propertyId");
+  const selectedProperty = properties?.find(
+    (property) => property.id === selectedPropertyId,
+  );
+  const needsCondoAddress =
+    ["TENANT", "PROPERTY_OWNER"].includes(selectedRole ?? "") &&
+    selectedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
   const {
     register: registerAssignment,
     handleSubmit: handleAssignmentSubmit,
@@ -293,6 +303,31 @@ export function UsersAdminPage() {
                     </option>
                   ))}
               </Select>
+            </div>
+          )}
+          {needsCondoAddress && (
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="buildingNo">Building No.</Label>
+                <Input
+                  id="buildingNo"
+                  {...register("buildingNo", { required: true })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="floorNo">Floor No.</Label>
+                <Input
+                  id="floorNo"
+                  {...register("floorNo", { required: true })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="unitNo">Unit No.</Label>
+                <Input
+                  id="unitNo"
+                  {...register("unitNo", { required: true })}
+                />
+              </div>
             </div>
           )}
         </form>

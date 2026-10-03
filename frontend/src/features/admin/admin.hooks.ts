@@ -50,6 +50,9 @@ export interface InviteUserInput {
   email: string;
   role: string;
   propertyId?: string;
+  buildingNo?: string;
+  floorNo?: string;
+  unitNo?: string;
 }
 
 export function useInviteUser() {

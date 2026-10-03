@@ -7,6 +7,9 @@ export const updateProfileSchema = z.object({
   phone: z.string().trim().nullable().optional(),
   avatarUrl: z.string().url().nullable().optional(),
   preferences: z.record(z.unknown()).optional(),
+  buildingNo: z.string().trim().min(1).nullable().optional(),
+  floorNo: z.string().trim().min(1).nullable().optional(),
+  unitNo: z.string().trim().min(1).nullable().optional(),
 });
 
 export const inviteUserSchema = z.object({
@@ -15,6 +18,9 @@ export const inviteUserSchema = z.object({
   email: z.string().trim().email(),
   role: z.nativeEnum(Role),
   propertyId: z.string().uuid().optional(),
+  buildingNo: z.string().trim().min(1).optional(),
+  floorNo: z.string().trim().min(1).optional(),
+  unitNo: z.string().trim().min(1).optional(),
 }).superRefine((data, ctx) => {
   if (data.role === Role.SUPER_ADMIN && data.propertyId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['propertyId'], message: 'Super Admin accounts cannot be assigned to a property.' });

@@ -5,6 +5,9 @@ export interface StoredUser {
   lastName: string;
   phone?: string | null;
   propertyId?: string | null;
+  buildingNo?: string | null;
+  floorNo?: string | null;
+  unitNo?: string | null;
   role: string;
   status: string;
   avatarUrl?: string | null;

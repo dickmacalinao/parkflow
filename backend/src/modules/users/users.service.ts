@@ -1,4 +1,4 @@
-import { AuditAction, Role, UserStatus, type Prisma } from '@prisma/client';
+import { AuditAction, PropertyType, Role, UserStatus } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, forbidden, notFound } from '../../utils/errors.js';
 import { hashPassword } from '../../utils/password.js';
@@ -17,6 +17,9 @@ const PUBLIC_FIELDS = {
   phone: true,
   avatarUrl: true,
   propertyId: true,
+  buildingNo: true,
+  floorNo: true,
+  unitNo: true,
   role: true,
   status: true,
   preferences: true,
@@ -32,12 +35,52 @@ export async function getProfile(userId: string) {
 
 export async function updateProfile(
   userId: string,
-  data: Pick<Prisma.UserUpdateInput, 'firstName' | 'lastName' | 'phone' | 'avatarUrl' | 'preferences'>,
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    avatarUrl: string | null;
+    preferences: Record<string, unknown>;
+    buildingNo: string | null;
+    floorNo: string | null;
+    unitNo: string | null;
+  }>,
   req: Request
 ) {
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      role: true,
+      buildingNo: true,
+      floorNo: true,
+      unitNo: true,
+      assignedProperty: { select: { type: true } },
+    },
+  });
+  if (!currentUser) throw notFound('User not found.');
+
+  const addressFieldsProvided =
+    data.buildingNo !== undefined || data.floorNo !== undefined || data.unitNo !== undefined;
+  const canHaveCondoAddress =
+    (currentUser.role === Role.TENANT || currentUser.role === Role.PROPERTY_OWNER) &&
+    currentUser.assignedProperty?.type === PropertyType.RESIDENTIAL_CONDOMINIUM;
+  if (canHaveCondoAddress) {
+    const buildingNo = data.buildingNo === undefined ? currentUser.buildingNo : data.buildingNo;
+    const floorNo = data.floorNo === undefined ? currentUser.floorNo : data.floorNo;
+    const unitNo = data.unitNo === undefined ? currentUser.unitNo : data.unitNo;
+    if (![buildingNo, floorNo, unitNo].every((value) => value?.trim())) {
+      throw badRequest('Building number, floor number, and unit number are required for condominium tenants and owners.');
+    }
+  } else if (
+    addressFieldsProvided &&
+    [data.buildingNo, data.floorNo, data.unitNo].some((value) => value?.trim())
+  ) {
+    throw badRequest('Building, floor, and unit details are only accepted for condominium tenants and owners.');
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
-    data: { ...data, updatedBy: userId },
+    data: { ...data, updatedBy: userId } as Parameters<typeof prisma.user.update>[0]['data'],
     select: PUBLIC_FIELDS,
   });
   await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'User', entityId: userId });
@@ -86,7 +129,16 @@ export async function listUsers(
  * a "set your password" link that reuses the email-verification token flow.
  */
 export async function inviteUser(
-  input: { firstName: string; lastName: string; email: string; role: Role; propertyId?: string },
+  input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: Role;
+    propertyId?: string;
+    buildingNo?: string;
+    floorNo?: string;
+    unitNo?: string;
+  },
   req: Request
 ) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
@@ -97,10 +149,20 @@ export async function inviteUser(
   }
 
   const property = input.propertyId
-    ? await prisma.property.findFirst({ where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null }, select: { id: true } })
+    ? await prisma.property.findFirst({ where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null }, select: { id: true, type: true } })
     : null;
   if (input.role !== Role.SUPER_ADMIN && !property) throw badRequest('Choose an active property for this user.');
   if (input.role === Role.SUPER_ADMIN && property) throw badRequest('Super Admin accounts cannot be assigned to a property.');
+  const needsCondominiumAddress =
+    (input.role === Role.TENANT || input.role === Role.PROPERTY_OWNER) &&
+    property?.type === PropertyType.RESIDENTIAL_CONDOMINIUM;
+  const addressFields = [input.buildingNo, input.floorNo, input.unitNo];
+  if (needsCondominiumAddress && addressFields.some((value) => !value?.trim())) {
+    throw badRequest('Building number, floor number, and unit number are required for condominium tenants and owners.');
+  }
+  if (!needsCondominiumAddress && addressFields.some(Boolean)) {
+    throw badRequest('Building, floor, and unit details are only accepted for condominium tenants and owners.');
+  }
   if (req.user?.role !== Role.SUPER_ADMIN && property?.id !== (await getAssignedPropertyId(req.user!.id, req.user!.role))) {
     throw forbidden('You can only assign users to your assigned property.');
   }
@@ -116,6 +178,9 @@ export async function inviteUser(
       lastName: input.lastName,
       role: input.role,
       propertyId: property?.id ?? null,
+      buildingNo: needsCondominiumAddress ? input.buildingNo : null,
+      floorNo: needsCondominiumAddress ? input.floorNo : null,
+      unitNo: needsCondominiumAddress ? input.unitNo : null,
       status: UserStatus.PENDING_VERIFICATION,
       passwordHash,
       emailVerificationToken,
@@ -199,7 +264,10 @@ export async function updateUserProperty(targetUserId: string, propertyId: strin
         create: { propertyId, userId: targetUserId },
       });
     }
-    await tx.user.update({ where: { id: targetUserId }, data: { propertyId, updatedBy: req.user?.id } });
+    await tx.user.update({
+      where: { id: targetUserId },
+      data: { propertyId, buildingNo: null, floorNo: null, unitNo: null, updatedBy: req.user?.id },
+    });
   });
 
   await recordAudit({
