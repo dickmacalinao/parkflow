@@ -49,6 +49,7 @@ export function UsersAdminPage() {
   const { data: properties } = useProperties();
   const canManageUsers =
     user && ["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(user.role);
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const updateStatus = useUpdateUserStatus();
   const invite = useInviteUser();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -117,23 +118,27 @@ export function UsersAdminPage() {
               <TH>Name</TH>
               <TH>Email</TH>
               <TH>Role</TH>
-              <TH>
-                <div className="space-y-2">
-                  <span>Property</span>
-                  <Select
-                    aria-label="Filter users by property"
-                    value={propertyFilter}
-                    onChange={(event) => setPropertyFilter(event.target.value)}
-                  >
-                    <option value="">All properties</option>
-                    {properties?.map((property) => (
-                      <option key={property.id} value={property.id}>
-                        {property.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </TH>
+              {isSuperAdmin && (
+                <TH>
+                  <div className="space-y-2">
+                    <span>Property</span>
+                    <Select
+                      aria-label="Filter users by property"
+                      value={propertyFilter}
+                      onChange={(event) =>
+                        setPropertyFilter(event.target.value)
+                      }
+                    >
+                      <option value="">All properties</option>
+                      {properties?.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {property.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </TH>
+              )}
               <TH>
                 <div className="space-y-2">
                   <span>Status</span>
@@ -169,11 +174,14 @@ export function UsersAdminPage() {
                 <TD className="capitalize">
                   {u.role.replace(/_/g, " ").toLowerCase()}
                 </TD>
-                <TD>
-                  {properties?.find((property) => property.id === u.propertyId)
-                    ?.name ??
-                    (u.role === "SUPER_ADMIN" ? "Global" : "Unassigned")}
-                </TD>
+                {isSuperAdmin && (
+                  <TD>
+                    {properties?.find(
+                      (property) => property.id === u.propertyId,
+                    )?.name ??
+                      (u.role === "SUPER_ADMIN" ? "Global" : "Unassigned")}
+                  </TD>
+                )}
                 <TD>
                   <Badge tone={STATUS_TONE[u.status] ?? "muted"}>
                     {u.status.replace(/_/g, " ").toLowerCase()}
