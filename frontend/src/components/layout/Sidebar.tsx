@@ -6,7 +6,6 @@ import {
   CalendarCheck,
   Users,
   ShieldCheck,
-  Ticket,
   UserRound,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -40,7 +39,7 @@ const NAV: NavItem[] = [
     ],
   },
   { to: "/reservations", label: "Reservations", icon: CalendarCheck },
-  { to: "/visitors", label: "Visitor Passes", icon: Ticket },
+  // { to: "/visitors", label: "Visitor Passes", icon: Ticket },
   {
     to: "/admin/users",
     label: "Users",
