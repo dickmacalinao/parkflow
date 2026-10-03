@@ -25,7 +25,7 @@ const NAV: NavItem[] = [
     to: "/properties",
     label: "Properties",
     icon: Building2,
-    roles: ["SUPER_ADMIN", "PROPERTY_MANAGER"],
+    roles: ["SUPER_ADMIN"],
   },
   {
     to: "/parking",
