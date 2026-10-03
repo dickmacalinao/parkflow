@@ -191,7 +191,7 @@ export function UsersAdminPage() {
                           Assign property
                         </Button>
                       )}
-                    {u.status === "ACTIVE" ? (
+                    {u.role !== "SUPER_ADMIN" && u.status === "ACTIVE" ? (
                       <Button
                         size="sm"
                         variant="destructive"
