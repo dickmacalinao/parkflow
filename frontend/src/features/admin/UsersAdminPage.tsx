@@ -131,27 +131,6 @@ export function UsersAdminPage() {
             <TR>
               <TH>Name</TH>
               <TH>Email</TH>
-              <TH>
-                <div className="space-y-2">
-                  <span>Role</span>
-                  <Select
-                    aria-label="Filter users by role"
-                    value={roleFilter}
-                    onChange={(event) => setRoleFilter(event.target.value)}
-                  >
-                    <option value="">All roles</option>
-                    {ROLES.filter((role) =>
-                      user?.role === "SUPER_ADMIN"
-                        ? true
-                        : role.value !== "SUPER_ADMIN",
-                    ).map((role) => (
-                      <option key={role.value} value={role.value}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </TH>
               {isSuperAdmin && (
                 <TH>
                   <div className="space-y-2">
@@ -173,6 +152,27 @@ export function UsersAdminPage() {
                   </div>
                 </TH>
               )}
+              <TH>
+                <div className="space-y-2">
+                  <span>Role</span>
+                  <Select
+                    aria-label="Filter users by role"
+                    value={roleFilter}
+                    onChange={(event) => setRoleFilter(event.target.value)}
+                  >
+                    <option value="">All roles</option>
+                    {ROLES.filter((role) =>
+                      user?.role === "SUPER_ADMIN"
+                        ? true
+                        : role.value !== "SUPER_ADMIN",
+                    ).map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </TH>
               <TH>
                 <div className="space-y-2">
                   <span>Status</span>
@@ -205,9 +205,6 @@ export function UsersAdminPage() {
                   {u.firstName} {u.lastName}
                 </TD>
                 <TD>{u.email}</TD>
-                <TD className="capitalize">
-                  {u.role.replace(/_/g, " ").toLowerCase()}
-                </TD>
                 {isSuperAdmin && (
                   <TD>
                     {properties?.find(
@@ -216,6 +213,9 @@ export function UsersAdminPage() {
                       (u.role === "SUPER_ADMIN" ? "Global" : "Unassigned")}
                   </TD>
                 )}
+                <TD className="capitalize">
+                  {u.role.replace(/_/g, " ").toLowerCase()}
+                </TD>
                 <TD>
                   <Badge tone={STATUS_TONE[u.status] ?? "muted"}>
                     {u.status.replace(/_/g, " ").toLowerCase()}
