@@ -86,7 +86,7 @@ export function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal information</CardTitle>
+          <CardTitle>Personal Information</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -94,7 +94,7 @@ export function ProfilePage() {
             {success && <Alert tone="success">Profile updated.</Alert>}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="firstName">First name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
                   autoComplete="given-name"
@@ -103,7 +103,7 @@ export function ProfilePage() {
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last name</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
                   autoComplete="family-name"
@@ -158,7 +158,7 @@ export function ProfilePage() {
             )}
             <div className="flex justify-end">
               <Button type="submit" isLoading={isSubmitting}>
-                Save profile
+                Save Profile
               </Button>
             </div>
           </form>
