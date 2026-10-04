@@ -137,11 +137,13 @@ export function UsersAdminPage() {
                       }
                     >
                       <option value="">All Properties</option>
-                      {properties?.map((property) => (
-                        <option key={property.id} value={property.id}>
-                          {property.name}
-                        </option>
-                      ))}
+                      {properties
+                        ?.filter((property) => property.status === "ACTIVE")
+                        ?.map((property) => (
+                          <option key={property.id} value={property.id}>
+                            {property.name}
+                          </option>
+                        ))}
                     </Select>
                   </div>
                 </TH>

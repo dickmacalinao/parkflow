@@ -42,11 +42,13 @@ export function ParkingSlotsPage() {
             onChange={(e) => setSelectedPropertyId(e.target.value || undefined)}
           >
             <option value="">Select a Property</option>
-            {properties?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+            {properties
+              ?.filter((p) => p.status === "ACTIVE")
+              ?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
           </Select>
         )}
       </div>

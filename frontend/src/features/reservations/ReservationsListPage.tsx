@@ -52,7 +52,7 @@ export function ReservationsListPage() {
         {[{ value: undefined, label: "All" }, ...RESERVATION_STATUS_TYPES].map(
           (s) => (
             <Button
-              key={s.value}
+              key={s.value ?? "all"}
               size="sm"
               variant={status === s.value ? "default" : "outline"}
               onClick={() => setStatus(s.value)}

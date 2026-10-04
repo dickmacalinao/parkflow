@@ -43,10 +43,6 @@ export function PropertiesListPage() {
   const setPropertyStatus = useSetPropertyStatus();
   const isAdmin = user?.role === "SUPER_ADMIN";
   const canRegister = user?.role === "SUPER_ADMIN";
-  const showActions =
-    isAdmin ||
-    user?.role === "PROPERTY_OWNER" ||
-    user?.role === "PROPERTY_MANAGER";
 
   const openEdit = (property: Property) => {
     setEditingProperty(property);
@@ -98,7 +94,7 @@ export function PropertiesListPage() {
           { value: "ACTIVE", label: "Active" },
           { value: "INACTIVE", label: "Inactive" },
           { value: "REJECTED", label: "Rejected" },
-          ...(isAdmin ? [{ value: "DELETED", label: "Deleted" }] : []),
+          { value: "DELETED", label: "Deleted" },
         ].map((s) => (
           <Button
             key={s.value ?? "all"}
@@ -126,12 +122,18 @@ export function PropertiesListPage() {
                 <TH>Name</TH>
                 <TH>Type</TH>
                 <TH>Location</TH>
-                <TH>Status</TH>
-                {showActions && <TH>Actions</TH>}
+                {!status && <TH>Status</TH>}
+                {!isDeletedView && <TH>Actions</TH>}
               </TR>
             )}
           </THead>
           <TBody>
+            {properties.length === 0 && (
+              <TR>
+                <TD>No record found.</TD>
+              </TR>
+            )}
+
             {properties?.map((p) => (
               <TR key={p.id}>
                 <TD>
@@ -152,82 +154,77 @@ export function PropertiesListPage() {
                 <TD>
                   {p.city}, {p.state}
                 </TD>
-                <TD>
-                  <Badge tone={STATUS_TONE[p.status] ?? "muted"}>
-                    {isDeletedView
-                      ? "deleted"
-                      : p.status.replace(/_/g, " ").toLowerCase()}
-                  </Badge>
-                </TD>
-                {showActions && (
+                {!status && (
                   <TD>
-                    {!isDeletedView &&
-                    (isAdmin ||
-                      p.owner?.id === user?.id ||
-                      p.managers?.some(
-                        (manager) => manager.userId === user?.id,
-                      )) ? (
-                      <ActionMenu>
-                        <ActionMenuItem onClick={() => openEdit(p)}>
-                          Edit
+                    <Badge tone={STATUS_TONE[p.status] ?? "muted"}>
+                      {isDeletedView
+                        ? "deleted"
+                        : p.status.replace(/_/g, " ").toLowerCase()}
+                    </Badge>
+                  </TD>
+                )}
+                {!isDeletedView && (
+                  <TD>
+                    <ActionMenu>
+                      <ActionMenuItem onClick={() => openEdit(p)}>
+                        Edit
+                      </ActionMenuItem>
+                      {isAdmin && p.status === "PENDING_APPROVAL" && (
+                        <>
+                          <ActionMenuItem
+                            onClick={() =>
+                              decide.mutate({ id: p.id, status: "ACTIVE" })
+                            }
+                          >
+                            Approve
+                          </ActionMenuItem>
+                          <ActionMenuItem
+                            destructive
+                            onClick={() =>
+                              decide.mutate({ id: p.id, status: "REJECTED" })
+                            }
+                          >
+                            Reject
+                          </ActionMenuItem>
+                        </>
+                      )}
+                      {isAdmin && p.status === "ACTIVE" && (
+                        <ActionMenuItem
+                          destructive
+                          disabled={setPropertyStatus.isPending}
+                          onClick={() =>
+                            setPropertyStatus.mutate({
+                              id: p.id,
+                              status: "INACTIVE",
+                            })
+                          }
+                        >
+                          Deactivate
                         </ActionMenuItem>
-                        {isAdmin && p.status === "PENDING_APPROVAL" && (
-                          <>
-                            <ActionMenuItem
-                              onClick={() =>
-                                decide.mutate({ id: p.id, status: "ACTIVE" })
-                              }
-                            >
-                              Approve
-                            </ActionMenuItem>
-                            <ActionMenuItem
-                              destructive
-                              onClick={() =>
-                                decide.mutate({ id: p.id, status: "REJECTED" })
-                              }
-                            >
-                              Reject
-                            </ActionMenuItem>
-                          </>
-                        )}
-                        {isAdmin && p.status === "ACTIVE" && (
-                          <ActionMenuItem
-                            destructive
-                            disabled={setPropertyStatus.isPending}
-                            onClick={() =>
-                              setPropertyStatus.mutate({
-                                id: p.id,
-                                status: "INACTIVE",
-                              })
-                            }
-                          >
-                            Deactivate
-                          </ActionMenuItem>
-                        )}
-                        {isAdmin && p.status === "INACTIVE" && (
-                          <ActionMenuItem
-                            disabled={setPropertyStatus.isPending}
-                            onClick={() =>
-                              setPropertyStatus.mutate({
-                                id: p.id,
-                                status: "ACTIVE",
-                              })
-                            }
-                          >
-                            Activate
-                          </ActionMenuItem>
-                        )}
-                        {isAdmin && (
-                          <ActionMenuItem
-                            destructive
-                            disabled={deleteProperty.isPending}
-                            onClick={() => onDelete(p)}
-                          >
-                            Delete
-                          </ActionMenuItem>
-                        )}
-                      </ActionMenu>
-                    ) : null}
+                      )}
+                      {isAdmin && p.status === "INACTIVE" && (
+                        <ActionMenuItem
+                          disabled={setPropertyStatus.isPending}
+                          onClick={() =>
+                            setPropertyStatus.mutate({
+                              id: p.id,
+                              status: "ACTIVE",
+                            })
+                          }
+                        >
+                          Activate
+                        </ActionMenuItem>
+                      )}
+                      {isAdmin && (
+                        <ActionMenuItem
+                          destructive
+                          disabled={deleteProperty.isPending}
+                          onClick={() => onDelete(p)}
+                        >
+                          Delete
+                        </ActionMenuItem>
+                      )}
+                    </ActionMenu>
                   </TD>
                 )}
               </TR>
