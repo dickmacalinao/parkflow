@@ -15,6 +15,7 @@ import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 import { Select } from "../../components/ui/Select";
 import { Alert } from "../../components/ui/Alert";
+import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
 import { useAuth } from "../../context/AuthContext";
@@ -211,35 +212,42 @@ export function UsersAdminPage() {
                 </TD>
                 {canManageUsers && (
                   <TD>
-                    {user?.role === "SUPER_ADMIN" &&
-                      u.role !== "SUPER_ADMIN" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openAssignment(u)}
-                        >
-                          Assign Property
-                        </Button>
-                      )}
-                    {u.role !== "SUPER_ADMIN" && u.status === "ACTIVE" ? (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() =>
-                          updateStatus.mutate({ id: u.id, status: "SUSPENDED" })
-                        }
-                      >
-                        Suspend
-                      </Button>
-                    ) : u.status === "SUSPENDED" ? (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          updateStatus.mutate({ id: u.id, status: "ACTIVE" })
-                        }
-                      >
-                        Reactivate
-                      </Button>
+                    {(user?.role === "SUPER_ADMIN" &&
+                      u.role !== "SUPER_ADMIN") ||
+                    u.status === "SUSPENDED" ||
+                    (u.role !== "SUPER_ADMIN" && u.status === "ACTIVE") ? (
+                      <ActionMenu>
+                        {user?.role === "SUPER_ADMIN" &&
+                          u.role !== "SUPER_ADMIN" && (
+                            <ActionMenuItem onClick={() => openAssignment(u)}>
+                              Assign Property
+                            </ActionMenuItem>
+                          )}
+                        {u.role !== "SUPER_ADMIN" && u.status === "ACTIVE" ? (
+                          <ActionMenuItem
+                            destructive
+                            onClick={() =>
+                              updateStatus.mutate({
+                                id: u.id,
+                                status: "SUSPENDED",
+                              })
+                            }
+                          >
+                            Suspend
+                          </ActionMenuItem>
+                        ) : u.status === "SUSPENDED" ? (
+                          <ActionMenuItem
+                            onClick={() =>
+                              updateStatus.mutate({
+                                id: u.id,
+                                status: "ACTIVE",
+                              })
+                            }
+                          >
+                            Reactivate
+                          </ActionMenuItem>
+                        ) : null}
+                      </ActionMenu>
                     ) : null}
                   </TD>
                 )}

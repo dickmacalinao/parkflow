@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { Alert } from "../../components/ui/Alert";
+import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { PropertyFormDialog } from "./PropertyFormDialog";
 import {
@@ -92,7 +93,7 @@ export function PropertiesListPage() {
           { value: "REJECTED", label: "Rejected" },
         ].map((s) => (
           <Button
-            key={s ?? "all"}
+            key={s.value ?? "all"}
             size="sm"
             variant={status === s.value ? "default" : "outline"}
             onClick={() => setStatus(s.value)}
@@ -144,46 +145,39 @@ export function PropertiesListPage() {
                     p.managers?.some(
                       (manager) => manager.userId === user?.id,
                     ) ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEdit(p)}
-                        >
+                      <ActionMenu>
+                        <ActionMenuItem onClick={() => openEdit(p)}>
                           Edit
-                        </Button>
+                        </ActionMenuItem>
                         {isAdmin && p.status === "PENDING_APPROVAL" && (
                           <>
-                            <Button
-                              size="sm"
+                            <ActionMenuItem
                               onClick={() =>
                                 decide.mutate({ id: p.id, status: "ACTIVE" })
                               }
                             >
                               Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
+                            </ActionMenuItem>
+                            <ActionMenuItem
+                              destructive
                               onClick={() =>
                                 decide.mutate({ id: p.id, status: "REJECTED" })
                               }
                             >
                               Reject
-                            </Button>
+                            </ActionMenuItem>
                           </>
                         )}
                         {isAdmin && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            isLoading={deleteProperty.isPending}
+                          <ActionMenuItem
+                            destructive
+                            disabled={deleteProperty.isPending}
                             onClick={() => onDelete(p)}
                           >
                             Deactivate
-                          </Button>
+                          </ActionMenuItem>
                         )}
-                      </div>
+                      </ActionMenu>
                     ) : null}
                   </TD>
                 )}

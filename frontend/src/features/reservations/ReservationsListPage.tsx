@@ -11,6 +11,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { RESERVATION_STATUS_TYPES } from "../../components/Types";
+import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 
 const STATUS_TONE: Record<
   string,
@@ -100,38 +101,35 @@ export function ReservationsListPage() {
                   </Badge>
                 </TD>
                 <TD>
-                  <div className="flex gap-2">
-                    {isStaff && r.status === "PENDING" && (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            decide.mutate({ id: r.id, status: "APPROVED" })
-                          }
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            decide.mutate({ id: r.id, status: "REJECTED" })
-                          }
-                        >
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    {["PENDING", "APPROVED"].includes(r.status) && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => cancel.mutate(r.id)}
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
+                  {((isStaff && r.status === "PENDING") ||
+                    ["PENDING", "APPROVED"].includes(r.status)) && (
+                    <ActionMenu>
+                      {isStaff && r.status === "PENDING" && (
+                        <>
+                          <ActionMenuItem
+                            onClick={() =>
+                              decide.mutate({ id: r.id, status: "APPROVED" })
+                            }
+                          >
+                            Approve
+                          </ActionMenuItem>
+                          <ActionMenuItem
+                            destructive
+                            onClick={() =>
+                              decide.mutate({ id: r.id, status: "REJECTED" })
+                            }
+                          >
+                            Reject
+                          </ActionMenuItem>
+                        </>
+                      )}
+                      {["PENDING", "APPROVED"].includes(r.status) && (
+                        <ActionMenuItem onClick={() => cancel.mutate(r.id)}>
+                          Cancel
+                        </ActionMenuItem>
+                      )}
+                    </ActionMenu>
+                  )}
                 </TD>
               </TR>
             ))}

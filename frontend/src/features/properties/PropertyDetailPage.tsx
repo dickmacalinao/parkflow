@@ -71,7 +71,7 @@ export function PropertyDetailPage() {
             <div className="flex gap-2">
               {canEdit && (
                 <Button variant="outline" onClick={() => setFormOpen(true)}>
-                  Edit property
+                  Edit Property
                 </Button>
               )}
               {isAdmin && (
