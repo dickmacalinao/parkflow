@@ -142,7 +142,7 @@ export function UsersAdminPage() {
                         setPropertyFilter(event.target.value)
                       }
                     >
-                      <option value="">All properties</option>
+                      <option value="">All Properties</option>
                       {properties?.map((property) => (
                         <option key={property.id} value={property.id}>
                           {property.name}
@@ -160,7 +160,7 @@ export function UsersAdminPage() {
                     value={roleFilter}
                     onChange={(event) => setRoleFilter(event.target.value)}
                   >
-                    <option value="">All roles</option>
+                    <option value="">All Roles</option>
                     {ROLES.filter((role) =>
                       user?.role === "SUPER_ADMIN"
                         ? true
@@ -181,15 +181,18 @@ export function UsersAdminPage() {
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
                   >
-                    <option value="">All statuses</option>
+                    <option value="">All Statuses</option>
                     {[
-                      "ACTIVE",
-                      "PENDING_VERIFICATION",
-                      "SUSPENDED",
-                      "DEACTIVATED",
+                      { value: "ACTIVE", label: "Active" },
+                      {
+                        value: "PENDING_VERIFICATION",
+                        label: "Pending Verification",
+                      },
+                      { value: "SUSPENDED", label: "Suspended" },
+                      { value: "DEACTIVATED", label: "Deactivated" },
                     ].map((status) => (
-                      <option key={status} value={status}>
-                        {status.replace(/_/g, " ").toLowerCase()}
+                      <option key={status.value} value={status.value}>
+                        {status.label}
                       </option>
                     ))}
                   </Select>

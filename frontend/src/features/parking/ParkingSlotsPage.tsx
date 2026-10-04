@@ -33,15 +33,15 @@ export function ParkingSlotsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Parking Slots</h1>
+      <div className="flex items-center">
+        <h1 className="text-2xl font-semibold mr-3">Parking Slots</h1>
         {isSuperAdmin && (
           <Select
             className="w-64"
             value={selectedPropertyId ?? ""}
             onChange={(e) => setSelectedPropertyId(e.target.value || undefined)}
           >
-            <option value="">Select a property</option>
+            <option value="">Select a Property</option>
             {properties?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}

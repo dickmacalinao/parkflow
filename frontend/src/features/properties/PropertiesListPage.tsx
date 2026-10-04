@@ -85,14 +85,19 @@ export function PropertiesListPage() {
       {error && <Alert tone="destructive">{error}</Alert>}
 
       <div className="flex gap-2">
-        {[undefined, "PENDING_APPROVAL", "ACTIVE", "REJECTED"].map((s) => (
+        {[
+          { value: undefined, label: "All" },
+          { value: "PENDING_APPROVAL", label: "Pending Approval" },
+          { value: "ACTIVE", label: "Active" },
+          { value: "REJECTED", label: "Rejected" },
+        ].map((s) => (
           <Button
             key={s ?? "all"}
             size="sm"
-            variant={status === s ? "default" : "outline"}
-            onClick={() => setStatus(s)}
+            variant={status === s.value ? "default" : "outline"}
+            onClick={() => setStatus(s.value)}
           >
-            {s ? s.replace(/_/g, " ") : "All"}
+            {s.label}
           </Button>
         ))}
       </div>
