@@ -214,9 +214,25 @@ export function UsersAdminPage() {
                   <TD>
                     {(user?.role === "SUPER_ADMIN" &&
                       u.role !== "SUPER_ADMIN") ||
+                    (u.status === "PENDING_VERIFICATION" &&
+                      (user?.role === "SUPER_ADMIN" || u.id !== user?.id)) ||
                     u.status === "SUSPENDED" ||
                     (u.role !== "SUPER_ADMIN" && u.status === "ACTIVE") ? (
                       <ActionMenu>
+                        {u.status === "PENDING_VERIFICATION" &&
+                          (user?.role === "SUPER_ADMIN" ||
+                            u.id !== user?.id) && (
+                            <ActionMenuItem
+                              onClick={() =>
+                                updateStatus.mutate({
+                                  id: u.id,
+                                  status: "ACTIVE",
+                                })
+                              }
+                            >
+                              Activate
+                            </ActionMenuItem>
+                          )}
                         {user?.role === "SUPER_ADMIN" &&
                           u.role !== "SUPER_ADMIN" && (
                             <ActionMenuItem onClick={() => openAssignment(u)}>

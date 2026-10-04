@@ -207,7 +207,10 @@ export async function inviteUser(
 }
 
 export async function updateUserStatus(targetUserId: string, status: UserStatus, req: Request) {
-  const target = await prisma.user.findFirst({ where: { id: targetUserId, deletedAt: null }, select: { propertyId: true } });
+  const target = await prisma.user.findFirst({
+    where: { id: targetUserId, deletedAt: null },
+    select: { propertyId: true, status: true },
+  });
   if (!target) throw notFound('User not found.');
   if (req.user?.role === Role.PROPERTY_MANAGER && targetUserId === req.user.id) {
     throw forbidden('Property Managers cannot change their own account status.');
@@ -216,7 +219,20 @@ export async function updateUserStatus(targetUserId: string, status: UserStatus,
     if (!target.propertyId) throw forbidden();
     await assertPropertyAccess(req.user!.id, req.user!.role, target.propertyId);
   }
-  const user = await prisma.user.update({ where: { id: targetUserId }, data: { status, updatedBy: req.user?.id } });
+  const user = await prisma.user.update({
+    where: { id: targetUserId },
+    data: {
+      status,
+      updatedBy: req.user?.id,
+      ...(status === UserStatus.ACTIVE && target.status === UserStatus.PENDING_VERIFICATION
+        ? {
+            emailVerifiedAt: new Date(),
+            emailVerificationToken: null,
+            emailVerificationExpiresAt: null,
+          }
+        : {}),
+    },
+  });
   await recordAudit({
     req,
     action: AuditAction.UPDATE,
