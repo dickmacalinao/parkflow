@@ -13,6 +13,7 @@ import {
   useDeleteProperty,
   useProperties,
   useDecideProperty,
+  useSetPropertyStatus,
   type Property,
 } from "./properties.hooks";
 
@@ -29,12 +30,17 @@ const STATUS_TONE: Record<
 export function PropertiesListPage() {
   const { user } = useAuth();
   const [status, setStatus] = useState<string | undefined>(undefined);
+  const isDeletedView = status === "DELETED";
   const [formOpen, setFormOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { data: properties, isLoading } = useProperties({ status });
+  const { data: properties, isLoading } = useProperties({
+    status: isDeletedView ? undefined : status,
+    includeDeleted: isDeletedView,
+  });
   const decide = useDecideProperty();
   const deleteProperty = useDeleteProperty();
+  const setPropertyStatus = useSetPropertyStatus();
   const isAdmin = user?.role === "SUPER_ADMIN";
   const canRegister = user?.role === "SUPER_ADMIN";
   const showActions =
@@ -55,7 +61,7 @@ export function PropertiesListPage() {
   const onDelete = async (property: Property) => {
     if (
       !window.confirm(
-        `Deactivate ${property.name}? It will no longer appear in active property lists.`,
+        `Delete ${property.name}? It will move to Deleted properties.`,
       )
     )
       return;
@@ -90,7 +96,9 @@ export function PropertiesListPage() {
           { value: undefined, label: "All" },
           { value: "PENDING_APPROVAL", label: "Pending Approval" },
           { value: "ACTIVE", label: "Active" },
+          { value: "INACTIVE", label: "Inactive" },
           { value: "REJECTED", label: "Rejected" },
+          ...(isAdmin ? [{ value: "DELETED", label: "Deleted" }] : []),
         ].map((s) => (
           <Button
             key={s.value ?? "all"}
@@ -108,24 +116,35 @@ export function PropertiesListPage() {
       ) : (
         <Table>
           <THead>
-            <TR>
-              <TH>Name</TH>
-              <TH>Type</TH>
-              <TH>Location</TH>
-              <TH>Status</TH>
-              {showActions && <TH>Actions</TH>}
-            </TR>
+            {properties.length === 0 && (
+              <TR>
+                <TD>No record found.</TD>
+              </TR>
+            )}
+            {properties.length > 0 && (
+              <TR>
+                <TH>Name</TH>
+                <TH>Type</TH>
+                <TH>Location</TH>
+                <TH>Status</TH>
+                {showActions && <TH>Actions</TH>}
+              </TR>
+            )}
           </THead>
           <TBody>
             {properties?.map((p) => (
               <TR key={p.id}>
                 <TD>
-                  <Link
-                    to={`/properties/${p.id}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {p.name}
-                  </Link>
+                  {isDeletedView ? (
+                    <span className="font-medium">{p.name}</span>
+                  ) : (
+                    <Link
+                      to={`/properties/${p.id}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {p.name}
+                    </Link>
+                  )}
                 </TD>
                 <TD className="capitalize">
                   {p.type.replace(/_/g, " ").toLowerCase()}
@@ -135,16 +154,19 @@ export function PropertiesListPage() {
                 </TD>
                 <TD>
                   <Badge tone={STATUS_TONE[p.status] ?? "muted"}>
-                    {p.status.replace(/_/g, " ").toLowerCase()}
+                    {isDeletedView
+                      ? "deleted"
+                      : p.status.replace(/_/g, " ").toLowerCase()}
                   </Badge>
                 </TD>
                 {showActions && (
                   <TD>
-                    {isAdmin ||
-                    p.owner?.id === user?.id ||
-                    p.managers?.some(
-                      (manager) => manager.userId === user?.id,
-                    ) ? (
+                    {!isDeletedView &&
+                    (isAdmin ||
+                      p.owner?.id === user?.id ||
+                      p.managers?.some(
+                        (manager) => manager.userId === user?.id,
+                      )) ? (
                       <ActionMenu>
                         <ActionMenuItem onClick={() => openEdit(p)}>
                           Edit
@@ -168,13 +190,40 @@ export function PropertiesListPage() {
                             </ActionMenuItem>
                           </>
                         )}
+                        {isAdmin && p.status === "ACTIVE" && (
+                          <ActionMenuItem
+                            destructive
+                            disabled={setPropertyStatus.isPending}
+                            onClick={() =>
+                              setPropertyStatus.mutate({
+                                id: p.id,
+                                status: "INACTIVE",
+                              })
+                            }
+                          >
+                            Deactivate
+                          </ActionMenuItem>
+                        )}
+                        {isAdmin && p.status === "INACTIVE" && (
+                          <ActionMenuItem
+                            disabled={setPropertyStatus.isPending}
+                            onClick={() =>
+                              setPropertyStatus.mutate({
+                                id: p.id,
+                                status: "ACTIVE",
+                              })
+                            }
+                          >
+                            Activate
+                          </ActionMenuItem>
+                        )}
                         {isAdmin && (
                           <ActionMenuItem
                             destructive
                             disabled={deleteProperty.isPending}
                             onClick={() => onDelete(p)}
                           >
-                            Deactivate
+                            Delete
                           </ActionMenuItem>
                         )}
                       </ActionMenu>

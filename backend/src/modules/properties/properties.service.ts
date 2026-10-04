@@ -1,7 +1,7 @@
 import { AuditAction, PropertyStatus, type PropertyType, type Role } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
-import { badRequest, notFound } from '../../utils/errors.js';
+import { badRequest, forbidden, notFound } from '../../utils/errors.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { assertPropertyAccess, getAssignedPropertyId } from './propertyAccess.js';
 
@@ -39,12 +39,13 @@ export async function listAvailableProperties() {
 }
 
 export async function listProperties(
-  filters: { status?: PropertyStatus; type?: PropertyType; q?: string; page: number; pageSize: number },
+  filters: { status?: PropertyStatus; type?: PropertyType; q?: string; includeDeleted: boolean; page: number; pageSize: number },
   user: { id: string; role: Role },
 ) {
+  if (filters.includeDeleted && user.role !== 'SUPER_ADMIN') throw forbidden();
   const assignedPropertyId = await getAssignedPropertyId(user.id, user.role);
   const where = {
-    deletedAt: null,
+    deletedAt: filters.includeDeleted ? { not: null } : null,
     ...(assignedPropertyId ? { id: assignedPropertyId } : {}),
     status: filters.status,
     type: filters.type,
@@ -99,6 +100,25 @@ export async function decideProperty(id: string, status: PropertyStatus.ACTIVE |
     entityId: id,
     propertyId: id,
     description: reason,
+  });
+  return property;
+}
+
+export async function setPropertyStatus(id: string, status: 'ACTIVE' | 'INACTIVE', req: Request) {
+  const result = await prisma.property.updateMany({
+    where: { id, deletedAt: null },
+    data: { status, updatedBy: req.user?.id },
+  });
+  if (!result.count) throw notFound('Property not found.');
+  const property = await prisma.property.findFirst({ where: { id, deletedAt: null } });
+  if (!property) throw notFound('Property not found.');
+  await recordAudit({
+    req,
+    action: AuditAction.UPDATE,
+    entityType: 'Property',
+    entityId: id,
+    propertyId: id,
+    description: `Status changed to ${status}`,
   });
   return property;
 }

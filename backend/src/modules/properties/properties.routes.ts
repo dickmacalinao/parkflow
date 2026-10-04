@@ -10,6 +10,7 @@ import {
   decidePropertySchema,
   listPropertiesQuerySchema,
   updatePropertySchema,
+  updatePropertyStatusSchema,
 } from './properties.schemas.js';
 import * as propertiesService from './properties.service.js';
 
@@ -95,6 +96,16 @@ router.get(
  *     responses:
  *       200: { description: Updated property }
  */
+router.patch(
+  '/:id/status',
+  requireAuth,
+  requireRole('SUPER_ADMIN'),
+  validate({ params: idParam, body: updatePropertyStatusSchema }),
+  asyncHandler(async (req, res) => {
+    res.json(await propertiesService.setPropertyStatus(req.params.id, req.body.status, req));
+  })
+);
+
 router.patch(
   '/:id',
   requireAuth,

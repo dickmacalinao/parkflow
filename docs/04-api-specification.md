@@ -57,9 +57,11 @@ Authenticated endpoints require `Authorization: Bearer <accessToken>`.
 |---|---|---|---|
 | POST | `/` | Super Admin | Register a property (status: PENDING_APPROVAL) |
 | GET | `/` | Any authenticated | List assigned property; Super Admin can list all |
+| GET | `/` with `includeDeleted=true` | Super Admin | List soft-deleted properties |
 | GET | `/available` | none | List active properties for account registration |
 | GET | `/:id` | Any authenticated | Assigned property detail; Super Admin can access all |
 | PATCH | `/:id` | Super Admin or assigned manager/owner | Update |
+| PATCH | `/:id/status` | Super Admin | Activate or deactivate |
 | POST | `/:id/decision` | Super Admin | Approve or reject a pending property |
 | DELETE | `/:id` | Super Admin | Soft-delete |
 | POST | `/:id/managers` | Super Admin, assigned Owner/Manager | Assign a Property Manager, with/without approval rights |

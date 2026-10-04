@@ -6,6 +6,7 @@ export interface Property {
   name: string;
   type: string;
   status: string;
+  deletedAt?: string | null;
   addressLine1?: string;
   addressLine2?: string | null;
   city: string;
@@ -33,13 +34,24 @@ export interface PropertyInput {
   longitude: string;
 }
 
-export function useProperties(params: { status?: string; q?: string } = {}) {
+export function useProperties(params: { status?: string; q?: string; includeDeleted?: boolean } = {}) {
   return useQuery({
     queryKey: ['properties', params],
     queryFn: async () => {
       const { data } = await apiClient.get('/properties', { params: { pageSize: 50, ...params } });
       return data.rows as Property[];
     },
+  });
+}
+
+export function useSetPropertyStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'ACTIVE' | 'INACTIVE' }) => {
+      const { data } = await apiClient.patch(`/properties/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
   });
 }
 

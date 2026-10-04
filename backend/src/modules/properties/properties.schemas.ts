@@ -31,10 +31,18 @@ export const decidePropertySchema = z.object({
   reason: z.string().trim().optional(),
 });
 
+export const updatePropertyStatusSchema = z.object({
+  status: z.enum([PropertyStatus.ACTIVE, PropertyStatus.INACTIVE]),
+});
+
 export const listPropertiesQuerySchema = z.object({
   status: z.nativeEnum(PropertyStatus).optional(),
   type: z.nativeEnum(PropertyType).optional(),
   q: z.string().trim().optional(),
+  includeDeleted: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .default(false)
+    .transform((value) => value === true || value === 'true'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
