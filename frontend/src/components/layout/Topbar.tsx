@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, LogOut, Bell, UserRound } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useProperties } from "../../features/properties/properties.hooks";
 import { useTheme } from "../../hooks/useTheme";
 import { Button } from "../ui/Button";
 import { useNotificationsUnreadCount } from "../../features/dashboard/notifications.hooks";
@@ -10,10 +11,16 @@ export function Topbar() {
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const { data: unread } = useNotificationsUnreadCount();
+  const { data: properties } = useProperties();
+  const assignedProperty = properties?.find(
+    (property) => property.id === user?.propertyId,
+  );
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-5">
-      <div />
+      <div className="text-lg font-semibold">
+        {user?.role !== "SUPER_ADMIN" && assignedProperty?.name}
+      </div>
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
