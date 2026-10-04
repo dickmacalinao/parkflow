@@ -7,25 +7,13 @@ import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 import { Select } from "../../components/ui/Select";
 import { getApiErrorMessage } from "../../lib/apiClient";
+import { PROPERTY_TYPES } from "../../components/Types";
 import {
   useCreateProperty,
   useUpdateProperty,
   type Property,
   type PropertyInput,
 } from "./properties.hooks";
-
-const PROPERTY_TYPES = [
-  "RESIDENTIAL_CONDOMINIUM",
-  "APARTMENT_COMPLEX",
-  "OFFICE_BUILDING",
-  "COMMERCIAL_CENTER",
-  "SHOPPING_MALL",
-  "HOTEL_RESORT",
-  "EVENT_VENUE",
-  "HOSPITAL",
-  "UNIVERSITY_SCHOOL",
-  "MIXED_USE",
-];
 
 const EMPTY_PROPERTY: PropertyInput = {
   name: "",
@@ -115,14 +103,14 @@ export function PropertyFormDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={property ? "Update property" : "Register property"}
+      title={property ? "Update Property" : "Register Property"}
       footer={
         <>
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" form="property-form" isLoading={isSubmitting}>
-            {property ? "Save changes" : "Register property"}
+            {property ? "Save Changes" : "Register Property"}
           </Button>
         </>
       }
@@ -134,7 +122,7 @@ export function PropertyFormDialog({
       >
         {error && <Alert tone="destructive">{error}</Alert>}
         <div>
-          <Label htmlFor="property-name">Property name</Label>
+          <Label htmlFor="property-name">Property Name</Label>
           <Input
             id="property-name"
             required
@@ -142,11 +130,15 @@ export function PropertyFormDialog({
           />
         </div>
         <div>
-          <Label htmlFor="property-type">Property type</Label>
-          <Select id="property-type" {...register("type", { required: true })}>
+          <Label htmlFor="property-type">Property Type</Label>
+          <Select
+            className="w-full"
+            id="property-type"
+            {...register("type", { required: true })}
+          >
             {PROPERTY_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type.replace(/_/g, " ").toLowerCase()}
+              <option key={type.value} value={type.value}>
+                {type.label}
               </option>
             ))}
           </Select>
@@ -160,7 +152,7 @@ export function PropertyFormDialog({
           />
         </div>
         <div>
-          <Label htmlFor="property-address2">Address line 2</Label>
+          <Label htmlFor="property-address2">Address Line 2</Label>
           <Input id="property-address2" {...register("addressLine2")} />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -181,7 +173,7 @@ export function PropertyFormDialog({
             />
           </div>
           <div>
-            <Label htmlFor="property-postal">Postal code</Label>
+            <Label htmlFor="property-postal">Postal Code</Label>
             <Input
               id="property-postal"
               required

@@ -77,7 +77,7 @@ export function PropertiesListPage() {
               setFormOpen(true);
             }}
           >
-            Register property
+            Register Property
           </Button>
         )}
       </div>

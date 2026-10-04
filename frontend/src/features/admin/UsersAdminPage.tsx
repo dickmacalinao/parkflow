@@ -18,16 +18,9 @@ import { Alert } from "../../components/ui/Alert";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
 import { useAuth } from "../../context/AuthContext";
+import { ROLE_TYPES, STATUS_TYPES } from "../../components/Types";
 import type { AdminUser } from "./admin.hooks";
 
-const ROLES = [
-  { label: "Super Admin", value: "SUPER_ADMIN" },
-  { label: "Property Manager", value: "PROPERTY_MANAGER" },
-  { label: "Property Owner", value: "PROPERTY_OWNER" },
-  { label: "Tenant", value: "TENANT" },
-  { label: "Visitor", value: "VISITOR" },
-  { label: "Parking Attendant", value: "PARKING_ATTENDANT" },
-];
 const STATUS_TONE: Record<
   string,
   "default" | "success" | "destructive" | "muted"
@@ -121,7 +114,7 @@ export function UsersAdminPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Users</h1>
         {canManageUsers && (
-          <Button onClick={() => setInviteOpen(true)}>Invite user</Button>
+          <Button onClick={() => setInviteOpen(true)}>Invite User</Button>
         )}
       </div>
 
@@ -134,7 +127,7 @@ export function UsersAdminPage() {
               {isSuperAdmin && (
                 <TH>
                   <div className="space-y-2">
-                    <span>Property</span>
+                    <span className="mr-2">Property</span>
                     <Select
                       aria-label="Filter users by property"
                       value={propertyFilter}
@@ -154,14 +147,14 @@ export function UsersAdminPage() {
               )}
               <TH>
                 <div className="space-y-2">
-                  <span>Role</span>
+                  <span className="mr-2">Role</span>
                   <Select
                     aria-label="Filter users by role"
                     value={roleFilter}
                     onChange={(event) => setRoleFilter(event.target.value)}
                   >
                     <option value="">All Roles</option>
-                    {ROLES.filter((role) =>
+                    {ROLE_TYPES.filter((role) =>
                       user?.role === "SUPER_ADMIN"
                         ? true
                         : role.value !== "SUPER_ADMIN",
@@ -175,22 +168,14 @@ export function UsersAdminPage() {
               </TH>
               <TH>
                 <div className="space-y-2">
-                  <span>Status</span>
+                  <span className="mr-2">Status</span>
                   <Select
                     aria-label="Filter users by status"
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
                   >
                     <option value="">All Statuses</option>
-                    {[
-                      { value: "ACTIVE", label: "Active" },
-                      {
-                        value: "PENDING_VERIFICATION",
-                        label: "Pending Verification",
-                      },
-                      { value: "SUSPENDED", label: "Suspended" },
-                      { value: "DEACTIVATED", label: "Deactivated" },
-                    ].map((status) => (
+                    {STATUS_TYPES.map((status) => (
                       <option key={status.value} value={status.value}>
                         {status.label}
                       </option>
@@ -233,7 +218,7 @@ export function UsersAdminPage() {
                           variant="outline"
                           onClick={() => openAssignment(u)}
                         >
-                          Assign property
+                          Assign Property
                         </Button>
                       )}
                     {u.role !== "SUPER_ADMIN" && u.status === "ACTIVE" ? (
@@ -267,7 +252,7 @@ export function UsersAdminPage() {
       <Dialog
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        title="Invite user"
+        title="Invite User"
       >
         <form
           id="invite-form"
@@ -277,14 +262,14 @@ export function UsersAdminPage() {
           {error && <Alert tone="destructive">{error}</Alert>}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
                 {...register("firstName", { required: true })}
               />
             </div>
             <div>
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
                 {...register("lastName", { required: true })}
@@ -301,8 +286,12 @@ export function UsersAdminPage() {
           </div>
           <div>
             <Label htmlFor="role">Role</Label>
-            <Select id="role" {...register("role", { required: true })}>
-              {ROLES.filter(
+            <Select
+              className="w-full"
+              id="role"
+              {...register("role", { required: true })}
+            >
+              {ROLE_TYPES.filter(
                 (role) =>
                   user?.role === "SUPER_ADMIN" || role.value !== "SUPER_ADMIN",
               ).map((r) => (
@@ -314,14 +303,15 @@ export function UsersAdminPage() {
           </div>
           {isSuperAdmin && selectedRole !== "SUPER_ADMIN" && (
             <div>
-              <Label htmlFor="propertyId">Assigned property</Label>
+              <Label htmlFor="propertyId">Assigned Property</Label>
               <Select
+                className="w-full"
                 id="propertyId"
                 {...register("propertyId", {
                   required: selectedRole !== "SUPER_ADMIN",
                 })}
               >
-                <option value="">Choose a property</option>
+                <option value="">Choose a Property</option>
                 {properties
                   ?.filter((property) => property.status === "ACTIVE")
                   .map((property) => (
@@ -362,7 +352,7 @@ export function UsersAdminPage() {
       <Dialog
         open={!!userToAssign}
         onClose={() => setUserToAssign(null)}
-        title={`Assign property${userToAssign ? ` to ${userToAssign.firstName} ${userToAssign.lastName}` : ""}`}
+        title={`Assign Property${userToAssign ? ` to ${userToAssign.firstName} ${userToAssign.lastName}` : ""}`}
       >
         <form
           id="assignment-form"
@@ -373,10 +363,11 @@ export function UsersAdminPage() {
           <div>
             <Label htmlFor="assigned-property">Property</Label>
             <Select
+              className="w-full"
               id="assigned-property"
               {...registerAssignment("propertyId", { required: true })}
             >
-              <option value="">Choose an active property</option>
+              <option value="">Choose an Active Property</option>
               {properties
                 ?.filter((property) => property.status === "ACTIVE")
                 .map((property) => (
@@ -395,7 +386,7 @@ export function UsersAdminPage() {
               Cancel
             </Button>
             <Button form="invite-form" type="submit" isLoading={isSubmitting}>
-              Send invite
+              Send Invite
             </Button>
           </div>
         </div>
@@ -411,7 +402,7 @@ export function UsersAdminPage() {
               type="submit"
               isLoading={isAssigning}
             >
-              Save assignment
+              Save Assignment
             </Button>
           </div>
         </div>

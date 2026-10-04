@@ -10,6 +10,7 @@ import { Table, TBody, TD, TH, THead, TR } from "../../components/ui/Table";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
+import { RESERVATION_STATUS_TYPES } from "../../components/Types";
 
 const STATUS_TONE: Record<
   string,
@@ -42,20 +43,20 @@ export function ReservationsListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Reservations</h1>
         <Link to="/reservations/new">
-          <Button>New reservation</Button>
+          <Button>New Reservation</Button>
         </Link>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {[undefined, "PENDING", "APPROVED", "CHECKED_IN", "CANCELLED"].map(
+        {[{ value: undefined, label: "All" }, ...RESERVATION_STATUS_TYPES].map(
           (s) => (
             <Button
-              key={s ?? "all"}
+              key={s.value}
               size="sm"
-              variant={status === s ? "default" : "outline"}
-              onClick={() => setStatus(s)}
+              variant={status === s.value ? "default" : "outline"}
+              onClick={() => setStatus(s.value)}
             >
-              {s ? s.replace(/_/g, " ") : "All"}
+              {s.label}
             </Button>
           ),
         )}
