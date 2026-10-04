@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useProperties } from "../properties/properties.hooks";
-import { useSetSlotStatus, useSlots } from "./parking.hooks";
+import { useSetSlotStatus, useSlots, type Slot } from "./parking.hooks";
 import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -30,6 +30,15 @@ export function ParkingSlotsPage() {
     : (user?.propertyId ?? undefined);
   const { data: slots, isLoading } = useSlots(propertyId);
   const setStatus = useSetSlotStatus();
+  const slotsByZone = new Map<string, { name: string; slots: Slot[] }>();
+  slots?.forEach((slot) => {
+    const zone = slotsByZone.get(slot.zone.id) ?? {
+      name: slot.zone.name,
+      slots: [],
+    };
+    zone.slots.push(slot);
+    slotsByZone.set(slot.zone.id, zone);
+  });
 
   return (
     <div className="space-y-4">
@@ -63,45 +72,74 @@ export function ParkingSlotsPage() {
         </p>
       )}
 
-      {slots && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-          {slots.map((slot) => (
-            <div
-              key={slot.id}
-              className="rounded-md border border-border p-3 text-center"
-            >
-              <div className="font-semibold">{slot.code}</div>
-              <Badge
-                tone={STATUS_TONE[slot.status] ?? "muted"}
-                className="mt-1"
-              >
-                {slot.status.toLowerCase()}
-              </Badge>
-              <div className="mt-2 flex justify-center gap-1">
-                {slot.status === "BLOCKED" ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setStatus.mutate({ id: slot.id, status: "AVAILABLE" })
-                    }
-                  >
-                    Unblock
-                  </Button>
-                ) : slot.status === "AVAILABLE" ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setStatus.mutate({ id: slot.id, status: "BLOCKED" })
-                    }
-                  >
-                    Block
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ))}
+      {slots && slots.length === 0 && propertyId && (
+        <p className="text-sm text-muted-foreground">
+          No parking slots found for this property.
+        </p>
+      )}
+
+      {slotsByZone.size > 0 && (
+        <div className="space-y-6">
+          {[...slotsByZone.entries()]
+            .sort(([, first], [, second]) =>
+              first.name.localeCompare(second.name),
+            )
+            .map(([zoneId, zone]) => (
+              <section key={zoneId} className="space-y-3">
+                <div className="flex items-baseline justify-between border-b border-border pb-2">
+                  <h2 className="text-lg font-semibold">{zone.name}</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {zone.slots.length}{" "}
+                    {zone.slots.length === 1 ? "slot" : "slots"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                  {zone.slots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="rounded-md border border-border p-3 text-center"
+                    >
+                      <div className="font-semibold">{slot.code}</div>
+                      <Badge
+                        tone={STATUS_TONE[slot.status] ?? "muted"}
+                        className="mt-1"
+                      >
+                        {slot.status.toLowerCase()}
+                      </Badge>
+                      <div className="mt-2 flex justify-center gap-1">
+                        {slot.status === "BLOCKED" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setStatus.mutate({
+                                id: slot.id,
+                                status: "AVAILABLE",
+                              })
+                            }
+                          >
+                            Unblock
+                          </Button>
+                        ) : slot.status === "AVAILABLE" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setStatus.mutate({
+                                id: slot.id,
+                                status: "BLOCKED",
+                              })
+                            }
+                          >
+                            Block
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
         </div>
       )}
     </div>

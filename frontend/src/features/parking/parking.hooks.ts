@@ -14,8 +14,22 @@ export function useSlots(propertyId?: string) {
   return useQuery({
     queryKey: ['slots', propertyId],
     queryFn: async () => {
-      const { data } = await apiClient.get('/parking/slots', { params: { propertyId, pageSize: 200 } });
-      return data.rows as Slot[];
+      const pageSize = 200;
+      const { data: firstPage } = await apiClient.get('/parking/slots', {
+        params: { propertyId, page: 1, pageSize },
+      });
+      const rows = [...firstPage.rows] as Slot[];
+      const total = Number(firstPage.total);
+
+      for (let page = 2; rows.length < total; page += 1) {
+        const { data } = await apiClient.get('/parking/slots', {
+          params: { propertyId, page, pageSize },
+        });
+        if (!data.rows.length) break;
+        rows.push(...(data.rows as Slot[]));
+      }
+
+      return rows;
     },
     enabled: !!propertyId,
   });
