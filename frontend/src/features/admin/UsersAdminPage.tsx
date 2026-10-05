@@ -232,8 +232,8 @@ export function UsersAdminPage() {
               <TH>Email</TH>
               {isSuperAdmin && <TH>Property</TH>}
               <TH>Role</TH>
-              <TH>Status</TH>
-              {canManageUsers && <TH>Actions</TH>}
+              <TH className="text-center">Status</TH>
+              {canManageUsers && <TH className="text-right">Actions</TH>}
             </TR>
           </THead>
           <TBody>
@@ -264,13 +264,13 @@ export function UsersAdminPage() {
                 <TD className="capitalize">
                   {u.role.replace(/_/g, " ").toLowerCase()}
                 </TD>
-                <TD>
+                <TD className="text-center">
                   <Badge tone={STATUS_TONE[u.status] ?? "muted"}>
                     {u.status.replace(/_/g, " ").toLowerCase()}
                   </Badge>
                 </TD>
                 {canManageUsers && (
-                  <TD>
+                  <TD className="text-right">
                     {(user?.role === "SUPER_ADMIN" &&
                       u.role !== "SUPER_ADMIN") ||
                     (u.status === "PENDING_VERIFICATION" &&

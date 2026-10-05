@@ -18,6 +18,7 @@ import { Spinner } from "../../components/ui/Spinner";
 import { RESERVATION_STATUS_TYPES } from "../../components/Types";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { Pagination } from "../../components/ui/Pagination";
+import { formatPrice } from "../../utils/format";
 
 const STATUS_TONE: Record<
   string,
@@ -183,9 +184,9 @@ export function ReservationsListPage() {
               <TH>Property / Bay</TH>
               {isStaff && <TH>Requested by</TH>}
               <TH>Dates</TH>
-              <TH>Amount</TH>
-              <TH>Status</TH>
-              <TH>Actions</TH>
+              <TH className="text-right">Amount</TH>
+              <TH className="text-center">Status</TH>
+              <TH className="text-right">Actions</TH>
             </TR>
           </THead>
           <TBody>
@@ -214,41 +215,43 @@ export function ReservationsListPage() {
                   {new Date(r.startAt).toLocaleString()} -&gt;{" "}
                   {new Date(r.endAt).toLocaleString()}
                 </TD>
-                <TD>${r.amount}</TD>
-                <TD>
+                <TD className="text-right">{formatPrice(r.amount)}</TD>
+                <TD className="text-center">
                   <Badge tone={STATUS_TONE[r.status] ?? "muted"}>
                     {r.status.replace(/_/g, " ").toLowerCase()}
                   </Badge>
                 </TD>
-                <TD>
+                <TD className="text-right">
                   {((isStaff && r.status === "PENDING") ||
                     ["PENDING", "APPROVED"].includes(r.status)) && (
-                    <ActionMenu>
-                      {isStaff && r.status === "PENDING" && (
-                        <>
-                          <ActionMenuItem
-                            onClick={() =>
-                              decide.mutate({ id: r.id, status: "APPROVED" })
-                            }
-                          >
-                            Approve
+                    <div className="flex justify-end">
+                      <ActionMenu>
+                        {isStaff && r.status === "PENDING" && (
+                          <>
+                            <ActionMenuItem
+                              onClick={() =>
+                                decide.mutate({ id: r.id, status: "APPROVED" })
+                              }
+                            >
+                              Approve
+                            </ActionMenuItem>
+                            <ActionMenuItem
+                              destructive
+                              onClick={() =>
+                                decide.mutate({ id: r.id, status: "REJECTED" })
+                              }
+                            >
+                              Reject
+                            </ActionMenuItem>
+                          </>
+                        )}
+                        {["PENDING", "APPROVED"].includes(r.status) && (
+                          <ActionMenuItem onClick={() => cancel.mutate(r.id)}>
+                            Cancel
                           </ActionMenuItem>
-                          <ActionMenuItem
-                            destructive
-                            onClick={() =>
-                              decide.mutate({ id: r.id, status: "REJECTED" })
-                            }
-                          >
-                            Reject
-                          </ActionMenuItem>
-                        </>
-                      )}
-                      {["PENDING", "APPROVED"].includes(r.status) && (
-                        <ActionMenuItem onClick={() => cancel.mutate(r.id)}>
-                          Cancel
-                        </ActionMenuItem>
-                      )}
-                    </ActionMenu>
+                        )}
+                      </ActionMenu>
+                    </div>
                   )}
                 </TD>
               </TR>

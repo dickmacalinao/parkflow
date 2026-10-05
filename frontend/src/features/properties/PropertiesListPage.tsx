@@ -124,7 +124,7 @@ export function PropertiesListPage() {
               <TH>Type</TH>
               <TH>Location</TH>
               {!status && <TH>Status</TH>}
-              {!isDeletedView && <TH>Actions</TH>}
+              {!isDeletedView && <TH className="text-right">Actions</TH>}
             </TR>
           </THead>
           <TBody>
@@ -169,7 +169,7 @@ export function PropertiesListPage() {
                   </TD>
                 )}
                 {!isDeletedView && (
-                  <TD>
+                  <TD className="text-right">
                     <ActionMenu>
                       <ActionMenuItem onClick={() => openEdit(p)}>
                         Edit

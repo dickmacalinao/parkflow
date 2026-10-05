@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { useAuth } from "../../context/AuthContext";
+import { formatPrice } from "../../utils/format";
 
 function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   const durationHours = (endAt.getTime() - startAt.getTime()) / 3_600_000;
@@ -34,13 +35,6 @@ function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   const amount =
     fullDays * dailyRate + Math.min(remainderHours * hourlyRate, dailyRate);
   return Math.round(amount * 100) / 100;
-}
-
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
 }
 
 export function NewReservationPage() {
@@ -242,7 +236,7 @@ export function NewReservationPage() {
                           </span>
                         </span>
                         <span className="shrink-0 text-sm font-semibold">
-                          {formatPrice(totalPrice)} total
+                          Total {formatPrice(totalPrice)}
                         </span>
                       </label>
                     );
