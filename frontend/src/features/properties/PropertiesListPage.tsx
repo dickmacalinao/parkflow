@@ -112,12 +112,12 @@ export function PropertiesListPage() {
       ) : (
         <Table>
           <THead>
-            {properties.length === 0 && (
+            {properties?.length === 0 && (
               <TR>
                 <TD>No record found.</TD>
               </TR>
             )}
-            {properties.length > 0 && (
+            {properties && properties.length > 0 && (
               <TR>
                 <TH>Name</TH>
                 <TH>Type</TH>
@@ -128,7 +128,7 @@ export function PropertiesListPage() {
             )}
           </THead>
           <TBody>
-            {properties.length === 0 && (
+            {properties?.length === 0 && (
               <TR>
                 <TD>No record found.</TD>
               </TR>

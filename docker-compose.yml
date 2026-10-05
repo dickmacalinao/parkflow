@@ -12,16 +12,28 @@ services:
     volumes:
       - parkflow_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U parkflow']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d parkflow']
       interval: 5s
       timeout: 5s
       retries: 10
 
-  backend:
-    build: ./backend
+  migrate:
+    build:
+      context: ./backend
+      target: build
+    command: ['sh', '-c', 'npx prisma migrate deploy && npm run seed']
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:admin@postgres:5432/parkflow?schema=public
+    restart: 'no'
+
+  backend:
+    build: ./backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: development
       PORT: 4000

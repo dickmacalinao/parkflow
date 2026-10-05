@@ -1,12 +1,14 @@
 # ---- deps: install once, cached unless package*.json changes ----
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # ---- build: compile TypeScript + generate the Prisma client ----
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
@@ -16,11 +18,13 @@ RUN npm run build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache openssl
 RUN addgroup -S parkflow && adduser -S parkflow -G parkflow
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev && npx prisma generate
-COPY --from=build /app/dist ./dist
+RUN npm ci --omit=dev
 COPY --from=build /app/prisma ./prisma
+RUN npx prisma generate
+COPY --from=build /app/dist ./dist
 USER parkflow
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

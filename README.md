@@ -32,14 +32,7 @@ docker compose up --build
 - Backend: http://localhost:4000 (health check at `/health`, Swagger at `/api/docs`)
 - Postgres: localhost:5432 (user/pass/db: `parkflow`)
 
-First run needs migrations + seed data (one-time, from your host machine with `psql`/`npm` installed):
-
-```bash
-cd backend
-DATABASE_URL=postgresql://parkflow:parkflow@localhost:5432/parkflow npx prisma migrate dev --name init
-DATABASE_URL=postgresql://parkflow:parkflow@localhost:5432/parkflow psql "$DATABASE_URL" -f prisma/sql/add-reservation-overlap-constraint.sql
-DATABASE_URL=postgresql://parkflow:parkflow@localhost:5432/parkflow npm run seed
-```
+On first startup, Compose waits for Postgres, applies all Prisma migrations, and seeds the demo accounts before starting the API.
 
 Then log in at http://localhost:5173/login with any seeded account (password `Passw0rd!`):
 

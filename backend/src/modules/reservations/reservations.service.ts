@@ -163,7 +163,7 @@ export async function getReservation(id: string, req: Request) {
 /** Property Manager / Owner approves or rejects a pending reservation. */
 export async function decideReservation(
   id: string,
-  status: ReservationStatus.APPROVED | ReservationStatus.REJECTED,
+  status: 'APPROVED' | 'REJECTED',
   reason: string | undefined,
   req: Request
 ) {
@@ -215,7 +215,11 @@ export async function cancelReservation(id: string, req: Request) {
   const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
   if (!isOwner && !isStaff) throw forbidden();
 
-  if ([ReservationStatus.CANCELLED, ReservationStatus.COMPLETED, ReservationStatus.CHECKED_OUT].includes(reservation.status)) {
+  if (
+    reservation.status === ReservationStatus.CANCELLED ||
+    reservation.status === ReservationStatus.COMPLETED ||
+    reservation.status === ReservationStatus.CHECKED_OUT
+  ) {
     throw conflict(`Reservation already ${reservation.status.toLowerCase()}.`);
   }
 

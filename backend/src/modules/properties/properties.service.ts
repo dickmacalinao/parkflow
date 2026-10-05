@@ -88,7 +88,7 @@ export async function updateProperty(id: string, data: Record<string, unknown>, 
 }
 
 /** Super Admin approves or rejects a pending property/owner application. */
-export async function decideProperty(id: string, status: PropertyStatus.ACTIVE | PropertyStatus.REJECTED, reason: string | undefined, req: Request) {
+export async function decideProperty(id: string, status: 'ACTIVE' | 'REJECTED', reason: string | undefined, req: Request) {
   const property = await prisma.property.update({
     where: { id },
     data: { status, updatedBy: req.user?.id },
