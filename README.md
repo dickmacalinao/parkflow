@@ -28,6 +28,8 @@ Live API docs once running: `http://localhost:4000/api/docs` (Swagger UI).
 docker compose up --build
 ```
 
+The Compose frontend runs Vite in development mode with HMR; changes under `frontend/src` are reflected automatically.
+
 - Frontend: http://localhost:5173
 - Backend: http://localhost:4000 (health check at `/health`, Swagger at `/api/docs`)
 - Docker Postgres: `localhost:5433` (user: `postgres`, password: `admin`, database: `parkflow`)

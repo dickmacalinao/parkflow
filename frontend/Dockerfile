@@ -18,3 +18,8 @@ COPY --from=build /app/package.json ./
 RUN npm install -g serve
 EXPOSE 5173
 CMD ["serve", "-s", "dist", "-l", "5173"]
+
+FROM deps AS dev
+COPY . .
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

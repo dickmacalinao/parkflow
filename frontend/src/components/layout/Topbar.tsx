@@ -15,6 +15,9 @@ export function Topbar() {
   const assignedProperty = properties?.find(
     (property) => property.id === user?.propertyId,
   );
+  const initials =
+    `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase() ||
+    "?";
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-5">
@@ -54,12 +57,30 @@ export function Topbar() {
         >
           <UserRound className="h-4 w-4" />
         </Button>
-        <div className="hidden text-right sm:block">
-          <div className="text-sm font-medium">
-            {user?.firstName} {user?.lastName}
+        <div className="hidden items-center gap-2 sm:flex">
+          <div
+            aria-hidden="true"
+            className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xs font-semibold text-primary"
+          >
+            <span>{initials}</span>
+            {user?.avatarUrl && (
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full rounded-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.style.visibility = "hidden";
+                }}
+              />
+            )}
           </div>
-          <div className="text-xs capitalize text-muted-foreground">
-            {user?.role.replace(/_/g, " ").toLowerCase()}
+          <div className="text-right">
+            <div className="text-sm font-medium">
+              {user?.firstName} {user?.lastName}
+            </div>
+            <div className="text-xs capitalize text-muted-foreground">
+              {user?.role.replace(/_/g, " ").toLowerCase()}
+            </div>
           </div>
         </div>
         <Button
