@@ -1,8 +1,27 @@
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useProperties } from "../properties/properties.hooks";
 import { useSetSlotStatus, useSlots, type Slot } from "./parking.hooks";
 import { usePendingSlots, useReviewSlot } from "./parking.hooks";
+import {
+  useReservations,
+  type Reservation,
+} from "../reservations/reservations.hooks";
+import {
+  ALLOCATION_LEGEND,
+  ZoneAllocationChart,
+  formatRangeLabel,
+  getPeriodRange,
+  shiftPeriod,
+  type ChartPeriod,
+} from "./ZoneAllocationChart";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/Card";
 import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -34,11 +53,31 @@ export function ParkingSlotsPage() {
     ? selectedPropertyId
     : (user?.propertyId ?? undefined);
   const { data: slots, isLoading } = useSlots(propertyId);
+  const { data: reservationsData } = useReservations(
+    { propertyId, pageSize: 100 },
+    !!propertyId,
+  );
   const { data: pendingSlots, isLoading: pendingSlotsLoading } =
     usePendingSlots(isPropertyManager);
   const setStatus = useSetSlotStatus();
   const reviewSlot = useReviewSlot();
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
+  const [chartDate, setChartDate] = useState(() => new Date());
+  const chartRange = getPeriodRange(chartDate, chartPeriod);
+  const reservationsBySlot = new Map<string, Reservation[]>();
+  reservationsData?.rows
+    .filter(
+      (reservation) =>
+        ["APPROVED", "CHECKED_IN"].includes(reservation.status) &&
+        new Date(reservation.startAt).getTime() < chartRange.end.getTime() &&
+        new Date(reservation.endAt).getTime() > chartRange.start.getTime(),
+    )
+    .forEach((reservation) => {
+      const list = reservationsBySlot.get(reservation.slot.id) ?? [];
+      list.push(reservation);
+      reservationsBySlot.set(reservation.slot.id, list);
+    });
   const slotsByZone = new Map<string, { name: string; slots: Slot[] }>();
   slots?.forEach((slot) => {
     const zone = slotsByZone.get(slot.zone.id) ?? {
@@ -237,6 +276,85 @@ export function ParkingSlotsPage() {
             </div>
           )}
         </section>
+      )}
+
+      {slotsByZone.size > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>Parking Allocation</CardTitle>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex gap-1">
+                  {(["DAY", "WEEK", "MONTH"] as ChartPeriod[]).map((period) => (
+                    <Button
+                      key={period}
+                      type="button"
+                      size="sm"
+                      variant={chartPeriod === period ? "default" : "outline"}
+                      onClick={() => setChartPeriod(period)}
+                    >
+                      {period.charAt(0) + period.slice(1).toLowerCase()}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-label="Previous period"
+                    onClick={() =>
+                      setChartDate((date) => shiftPeriod(date, chartPeriod, -1))
+                    }
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="min-w-40 text-center text-sm font-medium">
+                    {formatRangeLabel(chartRange, chartPeriod)}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-label="Next period"
+                    onClick={() =>
+                      setChartDate((date) => shiftPeriod(date, chartPeriod, 1))
+                    }
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {[...slotsByZone.entries()]
+              .sort(([, first], [, second]) =>
+                first.name.localeCompare(second.name),
+              )
+              .map(([zoneId, zone]) => (
+                <ZoneAllocationChart
+                  key={zoneId}
+                  zoneName={zone.name}
+                  slots={zone.slots}
+                  reservationsBySlot={reservationsBySlot}
+                  period={chartPeriod}
+                  range={chartRange}
+                />
+              ))}
+            <div className="flex flex-wrap gap-4 border-t border-border pt-3">
+              {ALLOCATION_LEGEND.map((item) => (
+                <span
+                  key={item.label}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
+                  <span className={`h-3 w-3 rounded-sm ${item.bar}`} />
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

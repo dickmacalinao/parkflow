@@ -14,13 +14,14 @@ export interface Reservation {
   requestedBy: { id: string; firstName: string; lastName: string; email: string };
 }
 
-export function useReservations(params: { status?: string; propertyId?: string; requestedById?: string; page?: number; pageSize?: number } = {}) {
+export function useReservations(params: { status?: string; propertyId?: string; requestedById?: string; page?: number; pageSize?: number } = {}, enabled = true) {
   return useQuery({
     queryKey: ['reservations', params],
     queryFn: async () => {
       const { data } = await apiClient.get('/reservations', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
       return data as PaginatedResponse<Reservation>;
     },
+    enabled,
   });
 }
 
