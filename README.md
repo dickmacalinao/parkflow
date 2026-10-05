@@ -30,7 +30,8 @@ docker compose up --build
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:4000 (health check at `/health`, Swagger at `/api/docs`)
-- Postgres: localhost:5432 (user/pass/db: `parkflow`)
+- Docker Postgres: `localhost:5433` (user: `postgres`, password: `admin`, database: `parkflow`)
+- Host-installed PostgreSQL, if running: `localhost:5432` (separate database instance)
 
 On first startup, Compose waits for Postgres, applies all Prisma migrations, and seeds the demo accounts before starting the API.
 
