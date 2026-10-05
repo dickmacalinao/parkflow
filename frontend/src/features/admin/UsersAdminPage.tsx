@@ -190,6 +190,16 @@ export function UsersAdminPage() {
             </TR>
           </THead>
           <TBody>
+            {users?.length === 0 && (
+              <TR>
+                <TD
+                  colSpan={7}
+                  className="py-8 text-center text-muted-foreground"
+                >
+                  No record found.
+                </TD>
+              </TR>
+            )}
             {users?.map((u) => (
               <TR key={u.id}>
                 <TD>

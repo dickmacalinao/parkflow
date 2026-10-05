@@ -79,6 +79,16 @@ export function ReservationsListPage() {
             </TR>
           </THead>
           <TBody>
+            {reservations?.length === 0 && (
+              <TR>
+                <TD
+                  colSpan={7}
+                  className="py-8 text-center text-muted-foreground"
+                >
+                  No record found.
+                </TD>
+              </TR>
+            )}
             {reservations?.map((r) => (
               <TR key={r.id}>
                 <TD className="font-mono text-xs">{r.code}</TD>

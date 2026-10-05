@@ -112,25 +112,23 @@ export function PropertiesListPage() {
       ) : (
         <Table>
           <THead>
-            {properties?.length === 0 && (
-              <TR>
-                <TD>No record found.</TD>
-              </TR>
-            )}
-            {properties && properties.length > 0 && (
-              <TR>
-                <TH>Name</TH>
-                <TH>Type</TH>
-                <TH>Location</TH>
-                {!status && <TH>Status</TH>}
-                {!isDeletedView && <TH>Actions</TH>}
-              </TR>
-            )}
+            <TR>
+              <TH>Name</TH>
+              <TH>Type</TH>
+              <TH>Location</TH>
+              {!status && <TH>Status</TH>}
+              {!isDeletedView && <TH>Actions</TH>}
+            </TR>
           </THead>
           <TBody>
             {properties?.length === 0 && (
               <TR>
-                <TD>No record found.</TD>
+                <TD
+                  colSpan={5}
+                  className="py-8 text-center text-muted-foreground"
+                >
+                  No record found.
+                </TD>
               </TR>
             )}
 
