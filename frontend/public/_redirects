@@ -1,2 +1,1 @@
 # Cloudflare Pages SPA fallback: unknown paths serve index.html so React Router can handle them.
-/*    /index.html   200
