@@ -33,6 +33,6 @@ export const STATUS_TYPES = [
 export const RESERVATION_STATUS_TYPES = [
   { value: "PENDING", label: "Pending" },
   { value: "APPROVED", label: "Approved" },
-  { value: "CHECKED_IN", label: "Checked In" },
+  //{ value: "CHECKED_IN", label: "Checked In" },
   { value: "CANCELLED", label: "Cancelled" },
 ];

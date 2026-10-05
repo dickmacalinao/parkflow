@@ -3,7 +3,6 @@ import { Controller } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useProperty } from "../properties/properties.hooks";
 import { useSlots, type Slot } from "../parking/parking.hooks";
 import { useCreateReservation, getApiErrorMessage } from "./reservations.hooks";
 import {
@@ -49,8 +48,6 @@ export function NewReservationPage() {
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const propertyId = user?.propertyId ?? undefined;
-  const { data: property, isLoading: propertyLoading } =
-    useProperty(propertyId);
   const create = useCreateReservation();
 
   const {

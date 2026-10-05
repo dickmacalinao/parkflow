@@ -204,6 +204,7 @@ model User {
   notifications       Notification[]
   auditLogs           AuditLog[]
   violationsReported  Violation[]       @relation("ViolationReportedBy")
+  ownedParkingSlots   ParkingSlot[]     @relation("ParkingSlotOwner")
 
   @@index([role])
   @@index([status])
@@ -313,6 +314,8 @@ model ParkingSlot {
   approvalReason String?
   approvedAt   DateTime?
   approvedById String?
+  ownerUserId  String?
+  owner        User?       @relation("ParkingSlotOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
   hourlyRate   Decimal?    @db.Decimal(8, 2)
   dailyRate    Decimal     @db.Decimal(8, 2)
   monthlyRate  Decimal?    @db.Decimal(8, 2)
@@ -327,6 +330,7 @@ model ParkingSlot {
   @@unique([zoneId, code])
   @@index([status])
   @@index([type])
+  @@index([ownerUserId])
   @@map("parking_slots")
 }
 

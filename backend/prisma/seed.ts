@@ -86,9 +86,10 @@ async function main() {
   for (const [i, slotCode] of slotCodes.entries()) {
     await prisma.parkingSlot.upsert({
       where: { zoneId_code: { zoneId: zone.id, code: slotCode } },
-      update: {},
+      update: { ownerUserId: owner.id },
       create: {
         zoneId: zone.id,
+        ownerUserId: owner.id,
         code: slotCode,
         type: i === 0 ? SlotType.ACCESSIBLE : i % 5 === 4 ? SlotType.EV_CHARGING : SlotType.STANDARD,
         isEvCharging: i % 5 === 4,

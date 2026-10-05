@@ -22,6 +22,16 @@ async function assertSlotAccess(req: Request, slotId: string): Promise<string> {
   return slot.zone.propertyId;
 }
 
+async function assertSlotOwner(req: Request, slotId: string): Promise<void> {
+  if (req.user?.role !== 'PROPERTY_OWNER') return;
+  const slot = await prisma.parkingSlot.findFirst({
+    where: { id: slotId, deletedAt: null },
+    select: { ownerUserId: true },
+  });
+  if (!slot) throw notFound('Parking slot not found.');
+  if (slot.ownerUserId !== req.user.id) throw forbidden('You can only manage parking slots you registered.');
+}
+
 export async function createZone(data: { propertyId: string; name: string; description?: string; sortOrder: number }, req: Request) {
   await assertRequestPropertyAccess(req, data.propertyId);
   const zone = await prisma.parkingZone.create({ data });
@@ -65,6 +75,7 @@ export async function createSlot(
         : SlotApprovalStatus.APPROVED,
       approvedAt: isOwnerSubmission ? null : new Date(),
       approvedById: isOwnerSubmission ? null : req.user!.id,
+      ownerUserId: isOwnerSubmission ? req.user!.id : null,
     },
   });
   await recordAudit({ req, action: AuditAction.CREATE, entityType: 'ParkingSlot', entityId: slot.id });
@@ -94,6 +105,7 @@ export async function bulkCreateSlots(
         : SlotApprovalStatus.APPROVED,
       approvedAt: req.user!.role === 'PROPERTY_OWNER' ? null : new Date(),
       approvedById: req.user!.role === 'PROPERTY_OWNER' ? null : req.user!.id,
+      ownerUserId: req.user!.role === 'PROPERTY_OWNER' ? req.user!.id : null,
     })),
     skipDuplicates: true,
   });
@@ -157,7 +169,11 @@ export async function listMySlots(req: Request) {
   const propertyId = await getAssignedPropertyId(req.user!.id, req.user!.role);
   if (!propertyId) throw forbidden('Your account is not assigned to a property.');
   return prisma.parkingSlot.findMany({
-    where: { deletedAt: null, zone: { propertyId, deletedAt: null } },
+    where: {
+      deletedAt: null,
+      ownerUserId: req.user!.id,
+      zone: { propertyId, deletedAt: null },
+    },
     orderBy: [{ zone: { sortOrder: 'asc' } }, { code: 'asc' }],
     include: { zone: { select: { id: true, name: true, propertyId: true } } },
   });
@@ -210,6 +226,7 @@ export async function reviewSlot(id: string, decision: 'APPROVED' | 'REJECTED', 
 
 export async function updateSlot(id: string, data: Record<string, unknown>, req: Request) {
   await assertSlotAccess(req, id);
+  await assertSlotOwner(req, id);
   const slot = await prisma.parkingSlot.update({
     where: { id },
     data: {
@@ -245,6 +262,7 @@ export async function setSlotStatus(id: string, status: SlotStatus, req: Request
 
 export async function deleteSlot(id: string, req: Request) {
   await assertSlotAccess(req, id);
+  await assertSlotOwner(req, id);
   await prisma.parkingSlot.update({ where: { id }, data: { deletedAt: new Date(), status: SlotStatus.INACTIVE } });
   await recordAudit({ req, action: AuditAction.DELETE, entityType: 'ParkingSlot', entityId: id });
 }
