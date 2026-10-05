@@ -168,9 +168,10 @@ export async function listSlots(
 export async function listMySlots(req: Request) {
   const propertyId = await getAssignedPropertyId(req.user!.id, req.user!.role);
   if (!propertyId) throw forbidden('Your account is not assigned to a property.');
+  const includeDeleted = req.query.includeDeleted === 'true';
   return prisma.parkingSlot.findMany({
     where: {
-      deletedAt: null,
+      ...(includeDeleted ? {} : { deletedAt: null }),
       ownerUserId: req.user!.id,
       zone: { propertyId, deletedAt: null },
     },

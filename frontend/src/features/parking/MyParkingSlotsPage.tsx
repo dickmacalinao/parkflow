@@ -69,7 +69,9 @@ export function MyParkingSlotsPage() {
   const { data: properties } = useProperties();
   const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading: zonesLoading } = useZones(propertyId);
-  const { data: slots, isLoading: slotsLoading } = useMySlots();
+  const { data: slots, isLoading: slotsLoading } = useMySlots({
+    includeDeleted: true,
+  });
   const {
     page,
     setPage,
@@ -197,7 +199,7 @@ export function MyParkingSlotsPage() {
               <TH>Hourly Rate</TH>
               <TH>Daily Rate</TH>
               <TH>Monthly Rate</TH>
-              <TH>Approval</TH>
+              <TH>Status</TH>
               <TH>Actions</TH>
             </TR>
           </THead>
@@ -211,9 +213,22 @@ export function MyParkingSlotsPage() {
                 <TD>${slot.dailyRate}</TD>
                 <TD>{slot.monthlyRate ? `$${slot.monthlyRate}` : "—"}</TD>
                 <TD>
-                  <Badge tone={APPROVAL_TONE[slot.approvalStatus] ?? "muted"}>
-                    {slot.approvalStatus.replace(/_/g, " ").toLowerCase()}
-                  </Badge>
+                  {!slot.deletedAt && (
+                    <Badge tone={APPROVAL_TONE[slot.approvalStatus] ?? "muted"}>
+                      {slot.approvalStatus.replace(/_/g, " ").toLowerCase()}
+                    </Badge>
+                  )}
+                  {slot.deletedAt && (
+                    <div>
+                      <Badge tone="muted" className="ml-1">
+                        deleted
+                      </Badge>
+
+                      <span className="text-xs text-muted-foreground">
+                        at {new Date(slot.deletedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
                   {slot.approvalReason && (
                     <div className="mt-1 text-xs text-muted-foreground">
                       {slot.approvalReason}
@@ -221,14 +236,19 @@ export function MyParkingSlotsPage() {
                   )}
                 </TD>
                 <TD>
-                  <ActionMenu>
-                    <ActionMenuItem onClick={() => openEdit(slot)}>
-                      Edit
-                    </ActionMenuItem>
-                    <ActionMenuItem destructive onClick={() => onDelete(slot)}>
-                      Delete
-                    </ActionMenuItem>
-                  </ActionMenu>
+                  {!slot.deletedAt && (
+                    <ActionMenu>
+                      <ActionMenuItem onClick={() => openEdit(slot)}>
+                        Edit
+                      </ActionMenuItem>
+                      <ActionMenuItem
+                        destructive
+                        onClick={() => onDelete(slot)}
+                      >
+                        Delete
+                      </ActionMenuItem>
+                    </ActionMenu>
+                  )}
                 </TD>
               </TR>
             ))}
