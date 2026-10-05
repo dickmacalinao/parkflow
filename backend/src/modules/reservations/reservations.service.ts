@@ -38,7 +38,11 @@ export async function createReservation(
   });
   if (!property) throw badRequest('Reservations are available only at active properties.');
   const slot = await prisma.parkingSlot.findFirst({
-    where: { id: input.slotId, deletedAt: null, zone: { propertyId: input.propertyId } },
+    where: {
+      id: input.slotId,
+      deletedAt: null,
+      zone: { propertyId: input.propertyId, deletedAt: null },
+    },
   });
   if (!slot) throw notFound('Parking slot not found for this property.');
   if (slot.status === 'BLOCKED' || slot.status === 'INACTIVE') {

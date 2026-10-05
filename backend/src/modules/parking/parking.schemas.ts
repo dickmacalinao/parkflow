@@ -8,7 +8,10 @@ export const createZoneSchema = z.object({
   sortOrder: z.number().int().default(0),
 });
 
-export const updateZoneSchema = createZoneSchema.partial().omit({ propertyId: true });
+export const updateZoneSchema = createZoneSchema
+  .partial()
+  .omit({ propertyId: true })
+  .extend({ description: z.string().trim().nullable().optional() });
 
 export const createSlotSchema = z.object({
   zoneId: z.string().uuid(),

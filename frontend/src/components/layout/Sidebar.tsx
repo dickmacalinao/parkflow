@@ -10,6 +10,7 @@ import {
   UserRound,
   PanelLeftClose,
   PanelLeftOpen,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
@@ -23,6 +24,12 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  {
+    to: "/zones",
+    label: "Zones",
+    icon: Layers,
+    roles: ["PROPERTY_MANAGER"],
+  },
   {
     to: "/properties",
     label: "Properties",

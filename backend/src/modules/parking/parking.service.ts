@@ -99,7 +99,10 @@ export async function listSlots(
     zoneId: filters.zoneId,
     status: filters.status,
     type: filters.type,
-    ...(assignedPropertyId ? { zone: { propertyId: assignedPropertyId } } : {}),
+    zone: {
+      deletedAt: null,
+      ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
+    },
   };
   const [rows, total] = await Promise.all([
     prisma.parkingSlot.findMany({

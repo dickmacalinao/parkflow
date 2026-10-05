@@ -11,6 +11,7 @@ import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { PropertiesListPage } from "../features/properties/PropertiesListPage";
 import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
 import { ParkingSlotsPage } from "../features/parking/ParkingSlotsPage";
+import { ZonesPage } from "../features/parking/ZonesPage";
 import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
@@ -24,6 +25,7 @@ const STAFF_ROLES = ["SUPER_ADMIN", "PROPERTY_OWNER", "PROPERTY_MANAGER"];
 const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN"];
 const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
+const ZONE_ROLES = ["PROPERTY_MANAGER"];
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/dashboard" replace /> },
@@ -45,6 +47,10 @@ export const router = createBrowserRouter([
           { path: "/profile", element: <ProfilePage /> },
           { path: "/reservations", element: <ReservationsListPage /> },
           { path: "/reservations/new", element: <NewReservationPage /> },
+          {
+            element: <RoleGuard roles={ZONE_ROLES} />,
+            children: [{ path: "/zones", element: <ZonesPage /> }],
+          },
           /*
           { path: "/visitors", element: <VisitorPassesPage /> },
           */

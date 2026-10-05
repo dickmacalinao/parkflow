@@ -10,6 +10,78 @@ export interface Slot {
   zone: { id: string; name: string; propertyId: string };
 }
 
+export interface Zone {
+  id: string;
+  propertyId: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  _count: { slots: number };
+}
+
+export interface ZoneInput {
+  propertyId: string;
+  name: string;
+  description?: string;
+  sortOrder: number;
+}
+
+type ZoneUpdateInput = Partial<Omit<ZoneInput, 'propertyId' | 'description'>> & {
+  description?: string | null;
+};
+
+export function useZones(propertyId?: string) {
+  return useQuery({
+    queryKey: ['zones', propertyId],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/parking/zones', { params: { propertyId } });
+      return data as Zone[];
+    },
+    enabled: !!propertyId,
+  });
+}
+
+export function useCreateZone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ZoneInput) => {
+      const { data } = await apiClient.post('/parking/zones', input);
+      return data as Zone;
+    },
+    onSuccess: (_data, input) => {
+      qc.invalidateQueries({ queryKey: ['zones', input.propertyId] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useUpdateZone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data: input }: { id: string; data: ZoneUpdateInput }) => {
+      const { data } = await apiClient.patch(`/parking/zones/${id}`, input);
+      return data as Zone;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['zones'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useDeleteZone() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/parking/zones/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['zones'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
 export function useSlots(propertyId?: string) {
   return useQuery({
     queryKey: ['slots', propertyId],
