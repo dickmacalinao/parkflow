@@ -11,11 +11,12 @@ import { getApiErrorMessage } from "../../lib/apiClient";
 import { PropertyFormDialog } from "./PropertyFormDialog";
 import {
   useDeleteProperty,
-  useProperties,
+  usePropertiesPage,
   useDecideProperty,
   useSetPropertyStatus,
   type Property,
 } from "./properties.hooks";
+import { Pagination } from "../../components/ui/Pagination";
 
 const STATUS_TONE: Record<
   string,
@@ -34,10 +35,13 @@ export function PropertiesListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { data: properties, isLoading } = useProperties({
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = usePropertiesPage({
     status: isDeletedView ? undefined : status,
     includeDeleted: isDeletedView,
+    page,
   });
+  const properties = data?.rows;
   const decide = useDecideProperty();
   const deleteProperty = useDeleteProperty();
   const setPropertyStatus = useSetPropertyStatus();
@@ -100,7 +104,10 @@ export function PropertiesListPage() {
             key={s.value ?? "all"}
             size="sm"
             variant={status === s.value ? "default" : "outline"}
-            onClick={() => setStatus(s.value)}
+            onClick={() => {
+              setStatus(s.value);
+              setPage(1);
+            }}
           >
             {s.label}
           </Button>
@@ -229,6 +236,14 @@ export function PropertiesListPage() {
             ))}
           </TBody>
         </Table>
+      )}
+      {!isLoading && data && (
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
       <PropertyFormDialog
         open={formOpen}

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
+import { DEFAULT_PAGE_SIZE, type PaginatedResponse } from '../../lib/pagination';
 
 export interface Property {
   id: string;
@@ -40,6 +41,16 @@ export function useProperties(params: { status?: string; q?: string; includeDele
     queryFn: async () => {
       const { data } = await apiClient.get('/properties', { params: { pageSize: 50, ...params } });
       return data.rows as Property[];
+    },
+  });
+}
+
+export function usePropertiesPage(params: { status?: string; q?: string; includeDeleted?: boolean; page?: number; pageSize?: number } = {}) {
+  return useQuery({
+    queryKey: ['properties', 'paged', params],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/properties', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+      return data as PaginatedResponse<Property>;
     },
   });
 }

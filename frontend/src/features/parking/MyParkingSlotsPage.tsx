@@ -12,6 +12,8 @@ import { Spinner } from "../../components/ui/Spinner";
 import { Table, TBody, TD, TH, THead, TR } from "../../components/ui/Table";
 import { useAuth } from "../../context/AuthContext";
 import { getApiErrorMessage } from "../../lib/apiClient";
+import { useClientPagination } from "../../lib/pagination";
+import { Pagination } from "../../components/ui/Pagination";
 import { useProperties } from "../properties/properties.hooks";
 import {
   useCreateSlot,
@@ -68,6 +70,13 @@ export function MyParkingSlotsPage() {
   const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading: zonesLoading } = useZones(propertyId);
   const { data: slots, isLoading: slotsLoading } = useMySlots();
+  const {
+    page,
+    setPage,
+    pageItems: pagedSlots,
+    total: slotsTotal,
+    pageSize,
+  } = useClientPagination(slots);
   const createSlot = useCreateSlot();
   const updateSlot = useUpdateSlot();
   const deleteSlot = useDeleteSlot();
@@ -193,7 +202,7 @@ export function MyParkingSlotsPage() {
             </TR>
           </THead>
           <TBody>
-            {slots?.map((slot) => (
+            {pagedSlots.map((slot) => (
               <TR key={slot.id}>
                 <TD>{slot.zone.name}</TD>
                 <TD className="font-mono">{slot.code}</TD>
@@ -236,6 +245,12 @@ export function MyParkingSlotsPage() {
           </TBody>
         </Table>
       )}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={slotsTotal}
+        onPageChange={setPage}
+      />
 
       <Dialog
         open={dialogOpen}

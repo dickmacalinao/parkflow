@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
+import { DEFAULT_PAGE_SIZE, type PaginatedResponse } from '../../lib/pagination';
 
 export interface VisitorPass {
   id: string;
@@ -11,12 +12,12 @@ export interface VisitorPass {
   qrCodeToken: string;
 }
 
-export function useVisitorPasses() {
+export function useVisitorPasses(params: { page?: number; pageSize?: number } = {}) {
   return useQuery({
-    queryKey: ['visitor-passes'],
+    queryKey: ['visitor-passes', params],
     queryFn: async () => {
-      const { data } = await apiClient.get('/visitor-passes', { params: { pageSize: 50 } });
-      return data.rows as VisitorPass[];
+      const { data } = await apiClient.get('/visitor-passes', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+      return data as PaginatedResponse<VisitorPass>;
     },
   });
 }

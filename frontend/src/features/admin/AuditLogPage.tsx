@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { useAuditLogs } from "./admin.hooks";
 import { Table, TBody, TD, TH, THead, TR } from "../../components/ui/Table";
 import { Spinner } from "../../components/ui/Spinner";
+import { Pagination } from "../../components/ui/Pagination";
 
 export function AuditLogPage() {
-  const { data: logs, isLoading } = useAuditLogs();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAuditLogs({ page });
+  const logs = data?.rows;
 
   return (
     <div className="space-y-4">
@@ -44,6 +48,14 @@ export function AuditLogPage() {
             ))}
           </TBody>
         </Table>
+      )}
+      {!isLoading && data && (
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

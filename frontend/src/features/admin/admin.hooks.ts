@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
+import { DEFAULT_PAGE_SIZE, type PaginatedResponse } from '../../lib/pagination';
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  description: string | null;
+  createdAt: string;
+  actor: { firstName: string; lastName: string; email: string } | null;
+}
 
 export interface AdminUser {
   id: string;
@@ -12,12 +23,12 @@ export interface AdminUser {
   createdAt: string;
 }
 
-export function useUsers(params: { role?: string; status?: string; propertyId?: string; q?: string } = {}) {
+export function useUsers(params: { role?: string; status?: string; propertyId?: string; q?: string; page?: number; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ['admin-users', params],
     queryFn: async () => {
-      const { data } = await apiClient.get('/users', { params: { pageSize: 50, ...params } });
-      return data.rows as AdminUser[];
+      const { data } = await apiClient.get('/users', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+      return data as PaginatedResponse<AdminUser>;
     },
   });
 }
@@ -66,20 +77,12 @@ export function useInviteUser() {
   });
 }
 
-export function useAuditLogs(params: { entityType?: string } = {}) {
+export function useAuditLogs(params: { entityType?: string; page?: number; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ['audit-logs', params],
     queryFn: async () => {
-      const { data } = await apiClient.get('/audit-logs', { params: { pageSize: 50, ...params } });
-      return data.rows as Array<{
-        id: string;
-        action: string;
-        entityType: string;
-        entityId: string | null;
-        description: string | null;
-        createdAt: string;
-        actor: { firstName: string; lastName: string; email: string } | null;
-      }>;
+      const { data } = await apiClient.get('/audit-logs', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+      return data as PaginatedResponse<AuditLogEntry>;
     },
   });
 }

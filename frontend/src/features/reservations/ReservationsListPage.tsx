@@ -12,6 +12,7 @@ import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { RESERVATION_STATUS_TYPES } from "../../components/Types";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
+import { Pagination } from "../../components/ui/Pagination";
 
 const STATUS_TONE: Record<
   string,
@@ -31,7 +32,9 @@ const STATUS_TONE: Record<
 export function ReservationsListPage() {
   const { user } = useAuth();
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const { data: reservations, isLoading } = useReservations({ status });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useReservations({ status, page });
+  const reservations = data?.rows;
   const decide = useDecideReservation();
   const cancel = useCancelReservation();
 
@@ -43,7 +46,7 @@ export function ReservationsListPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">
-          {user.role === "TENANT" ? "My Reservations" : "Reservations"}
+          {user?.role === "TENANT" ? "My Reservations" : "Reservations"}
         </h1>
         <Link to="/reservations/new">
           <Button>New Reservation</Button>
@@ -57,7 +60,10 @@ export function ReservationsListPage() {
               key={s.value ?? "all"}
               size="sm"
               variant={status === s.value ? "default" : "outline"}
-              onClick={() => setStatus(s.value)}
+              onClick={() => {
+                setStatus(s.value);
+                setPage(1);
+              }}
             >
               {s.label}
             </Button>
@@ -147,6 +153,14 @@ export function ReservationsListPage() {
             ))}
           </TBody>
         </Table>
+      )}
+      {!isLoading && data && (
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

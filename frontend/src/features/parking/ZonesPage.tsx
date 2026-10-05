@@ -10,6 +10,8 @@ import { Label } from "../../components/ui/Label";
 import { Spinner } from "../../components/ui/Spinner";
 import { Table, TBody, TD, TH, THead, TR } from "../../components/ui/Table";
 import { getApiErrorMessage } from "../../lib/apiClient";
+import { useClientPagination } from "../../lib/pagination";
+import { Pagination } from "../../components/ui/Pagination";
 import { useProperties } from "../properties/properties.hooks";
 import {
   useCreateZone,
@@ -31,6 +33,13 @@ export function ZonesPage() {
   const { data: properties } = useProperties();
   const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading } = useZones(propertyId);
+  const {
+    page,
+    setPage,
+    pageItems: pagedZones,
+    total: zonesTotal,
+    pageSize,
+  } = useClientPagination(zones);
   const createZone = useCreateZone();
   const updateZone = useUpdateZone();
   const deleteZone = useDeleteZone();
@@ -152,7 +161,7 @@ export function ZonesPage() {
             </TR>
           </THead>
           <TBody>
-            {zones?.map((zone) => (
+            {pagedZones.map((zone) => (
               <TR key={zone.id}>
                 <TD className="font-medium">{zone.name}</TD>
                 <TD>{zone.description || "—"}</TD>
@@ -183,6 +192,12 @@ export function ZonesPage() {
           </TBody>
         </Table>
       )}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={zonesTotal}
+        onPageChange={setPage}
+      />
 
       <Dialog
         open={dialogOpen}

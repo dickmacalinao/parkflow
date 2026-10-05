@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, getApiErrorMessage } from '../../lib/apiClient';
+import { DEFAULT_PAGE_SIZE, type PaginatedResponse } from '../../lib/pagination';
 
 export interface Reservation {
   id: string;
@@ -13,12 +14,12 @@ export interface Reservation {
   requestedBy: { id: string; firstName: string; lastName: string; email: string };
 }
 
-export function useReservations(params: { status?: string; propertyId?: string } = {}) {
+export function useReservations(params: { status?: string; propertyId?: string; page?: number; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ['reservations', params],
     queryFn: async () => {
-      const { data } = await apiClient.get('/reservations', { params: { pageSize: 50, ...params } });
-      return data.rows as Reservation[];
+      const { data } = await apiClient.get('/reservations', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+      return data as PaginatedResponse<Reservation>;
     },
   });
 }

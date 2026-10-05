@@ -22,7 +22,6 @@ import { ProfilePage } from "../features/profile/ProfilePage";
 import { UnauthorizedPage } from "./UnauthorizedPage";
 import { NotFoundPage } from "./NotFoundPage";
 
-const STAFF_ROLES = ["SUPER_ADMIN", "PROPERTY_OWNER", "PROPERTY_MANAGER"];
 const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN"];
 const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];

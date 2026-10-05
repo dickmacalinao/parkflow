@@ -16,6 +16,7 @@ import { Label } from "../../components/ui/Label";
 import { Select } from "../../components/ui/Select";
 import { Alert } from "../../components/ui/Alert";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
+import { Pagination } from "../../components/ui/Pagination";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
 import { useAuth } from "../../context/AuthContext";
@@ -37,11 +38,14 @@ export function UsersAdminPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [propertyFilter, setPropertyFilter] = useState("");
-  const { data: users, isLoading } = useUsers({
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useUsers({
     role: roleFilter || undefined,
     status: statusFilter || undefined,
     propertyId: propertyFilter || undefined,
+    page,
   });
+  const users = data?.rows;
   const { data: properties } = useProperties();
   const canManageUsers =
     user && ["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(user.role);
@@ -119,73 +123,90 @@ export function UsersAdminPage() {
         )}
       </div>
 
+      <section
+        aria-label="Filter users"
+        className={`flex flex-col rounded-md border border-border bg-card p-4 ${isSuperAdmin ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+      >
+        {isSuperAdmin && (
+          <div className="flex flex-row items-center">
+            <Label htmlFor="propertyFilter" className="w-20">
+              Property
+            </Label>
+            <Select
+              id="propertyFilter"
+              aria-label="Filter users by property"
+              value={propertyFilter}
+              onChange={(event) => {
+                setPropertyFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Properties</option>
+              {properties
+                ?.filter((property) => property.status === "ACTIVE")
+                .map((property) => (
+                  <option key={property.id} value={property.id}>
+                    {property.name}
+                  </option>
+                ))}
+            </Select>
+          </div>
+        )}
+        <div className="flex flex-row items-center">
+          <Label htmlFor="roleFilter" className="w-20">
+            Role
+          </Label>
+          <Select
+            id="roleFilter"
+            aria-label="Filter users by role"
+            value={roleFilter}
+            onChange={(event) => {
+              setRoleFilter(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">All Roles</option>
+            {ROLE_TYPES.filter((role) =>
+              isSuperAdmin ? true : role.value !== "SUPER_ADMIN",
+            ).map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex flex-row items-center">
+          <Label htmlFor="statusFilter" className="w-20">
+            Status
+          </Label>
+          <Select
+            id="statusFilter"
+            aria-label="Filter users by status"
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">All Statuses</option>
+            {STATUS_TYPES.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </section>
+
       {!isLoading && (
         <Table>
           <THead>
             <TR>
               <TH>Name</TH>
               <TH>Email</TH>
-              {isSuperAdmin && (
-                <TH>
-                  <div className="space-y-2">
-                    <span className="mr-2">Property</span>
-                    <Select
-                      aria-label="Filter users by property"
-                      value={propertyFilter}
-                      onChange={(event) =>
-                        setPropertyFilter(event.target.value)
-                      }
-                    >
-                      <option value="">All Properties</option>
-                      {properties
-                        ?.filter((property) => property.status === "ACTIVE")
-                        ?.map((property) => (
-                          <option key={property.id} value={property.id}>
-                            {property.name}
-                          </option>
-                        ))}
-                    </Select>
-                  </div>
-                </TH>
-              )}
-              <TH>
-                <div className="space-y-2">
-                  <span className="mr-2">Role</span>
-                  <Select
-                    aria-label="Filter users by role"
-                    value={roleFilter}
-                    onChange={(event) => setRoleFilter(event.target.value)}
-                  >
-                    <option value="">All Roles</option>
-                    {ROLE_TYPES.filter((role) =>
-                      user?.role === "SUPER_ADMIN"
-                        ? true
-                        : role.value !== "SUPER_ADMIN",
-                    ).map((role) => (
-                      <option key={role.value} value={role.value}>
-                        {role.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </TH>
-              <TH>
-                <div className="space-y-2">
-                  <span className="mr-2">Status</span>
-                  <Select
-                    aria-label="Filter users by status"
-                    value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                  >
-                    <option value="">All Statuses</option>
-                    {STATUS_TYPES.map((status) => (
-                      <option key={status.value} value={status.value}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </TH>
+              {isSuperAdmin && <TH>Property</TH>}
+              <TH>Role</TH>
+              <TH>Status</TH>
               {canManageUsers && <TH>Actions</TH>}
             </TR>
           </THead>
@@ -193,7 +214,7 @@ export function UsersAdminPage() {
             {users?.length === 0 && (
               <TR>
                 <TD
-                  colSpan={7}
+                  colSpan={4 + Number(isSuperAdmin) + Number(!!canManageUsers)}
                   className="py-8 text-center text-muted-foreground"
                 >
                   No record found.
@@ -283,6 +304,14 @@ export function UsersAdminPage() {
             ))}
           </TBody>
         </Table>
+      )}
+      {!isLoading && data && (
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
 
       <Dialog
