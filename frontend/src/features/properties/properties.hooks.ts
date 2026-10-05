@@ -35,13 +35,14 @@ export interface PropertyInput {
   longitude: string;
 }
 
-export function useProperties(params: { status?: string; q?: string; includeDeleted?: boolean } = {}) {
+export function useProperties(params: { status?: string; q?: string; includeDeleted?: boolean } = {}, enabled = true) {
   return useQuery({
     queryKey: ['properties', params],
     queryFn: async () => {
       const { data } = await apiClient.get('/properties', { params: { pageSize: 50, ...params } });
       return data.rows as Property[];
     },
+    enabled,
   });
 }
 

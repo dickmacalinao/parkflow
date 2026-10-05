@@ -23,13 +23,14 @@ export interface AdminUser {
   createdAt: string;
 }
 
-export function useUsers(params: { role?: string; status?: string; propertyId?: string; q?: string; page?: number; pageSize?: number } = {}) {
+export function useUsers(params: { role?: string; status?: string; propertyId?: string; q?: string; page?: number; pageSize?: number } = {}, enabled = true) {
   return useQuery({
     queryKey: ['admin-users', params],
     queryFn: async () => {
       const { data } = await apiClient.get('/users', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
       return data as PaginatedResponse<AdminUser>;
     },
+    enabled,
   });
 }
 

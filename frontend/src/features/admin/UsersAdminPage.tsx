@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   useAssignUserProperty,
   useInviteUser,
@@ -39,6 +40,7 @@ export function UsersAdminPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [propertyFilter, setPropertyFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const { data, isLoading } = useUsers({
     role: roleFilter || undefined,
     status: statusFilter || undefined,
@@ -125,77 +127,101 @@ export function UsersAdminPage() {
 
       <section
         aria-label="Filter users"
-        className={`flex flex-col rounded-md border border-border bg-card p-4 ${isSuperAdmin ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+        className="rounded-md border border-border bg-card p-4"
       >
-        {isSuperAdmin && (
-          <div className="flex flex-row items-center">
-            <Label htmlFor="propertyFilter" className="w-20">
-              Property
-            </Label>
-            <Select
-              id="propertyFilter"
-              aria-label="Filter users by property"
-              value={propertyFilter}
-              onChange={(event) => {
-                setPropertyFilter(event.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Properties</option>
-              {properties
-                ?.filter((property) => property.status === "ACTIVE")
-                .map((property) => (
-                  <option key={property.id} value={property.id}>
-                    {property.name}
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Filters</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-expanded={filtersOpen}
+            aria-controls="user-filters-body"
+            onClick={() => setFiltersOpen((open) => !open)}
+          >
+            {filtersOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        {filtersOpen && (
+          <div
+            id="user-filters-body"
+            className={`mt-4 grid gap-3 ${isSuperAdmin ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+          >
+            {isSuperAdmin && (
+              <div className="flex flex-row items-center">
+                <Label htmlFor="propertyFilter" className="w-20">
+                  Property
+                </Label>
+                <Select
+                  id="propertyFilter"
+                  aria-label="Filter users by property"
+                  value={propertyFilter}
+                  onChange={(event) => {
+                    setPropertyFilter(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">All Properties</option>
+                  {properties
+                    ?.filter((property) => property.status === "ACTIVE")
+                    .map((property) => (
+                      <option key={property.id} value={property.id}>
+                        {property.name}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+            )}
+            <div className="flex flex-row items-center">
+              <Label htmlFor="roleFilter" className="w-20">
+                Role
+              </Label>
+              <Select
+                id="roleFilter"
+                aria-label="Filter users by role"
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All Roles</option>
+                {ROLE_TYPES.filter((role) =>
+                  isSuperAdmin ? true : role.value !== "SUPER_ADMIN",
+                ).map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
                   </option>
                 ))}
-            </Select>
+              </Select>
+            </div>
+            <div className="flex flex-row items-center">
+              <Label htmlFor="statusFilter" className="w-20">
+                Status
+              </Label>
+              <Select
+                id="statusFilter"
+                aria-label="Filter users by status"
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All Statuses</option>
+                {STATUS_TYPES.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
         )}
-        <div className="flex flex-row items-center">
-          <Label htmlFor="roleFilter" className="w-20">
-            Role
-          </Label>
-          <Select
-            id="roleFilter"
-            aria-label="Filter users by role"
-            value={roleFilter}
-            onChange={(event) => {
-              setRoleFilter(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">All Roles</option>
-            {ROLE_TYPES.filter((role) =>
-              isSuperAdmin ? true : role.value !== "SUPER_ADMIN",
-            ).map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="flex flex-row items-center">
-          <Label htmlFor="statusFilter" className="w-20">
-            Status
-          </Label>
-          <Select
-            id="statusFilter"
-            aria-label="Filter users by status"
-            value={statusFilter}
-            onChange={(event) => {
-              setStatusFilter(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">All Statuses</option>
-            {STATUS_TYPES.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </Select>
-        </div>
       </section>
 
       {!isLoading && (

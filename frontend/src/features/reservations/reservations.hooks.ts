@@ -14,7 +14,7 @@ export interface Reservation {
   requestedBy: { id: string; firstName: string; lastName: string; email: string };
 }
 
-export function useReservations(params: { status?: string; propertyId?: string; page?: number; pageSize?: number } = {}) {
+export function useReservations(params: { status?: string; propertyId?: string; requestedById?: string; page?: number; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ['reservations', params],
     queryFn: async () => {
