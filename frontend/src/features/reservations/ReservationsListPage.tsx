@@ -42,7 +42,9 @@ export function ReservationsListPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Reservations</h1>
+        <h1 className="text-2xl font-semibold">
+          {user.role === "TENANT" ? "My Reservations" : "Reservations"}
+        </h1>
         <Link to="/reservations/new">
           <Button>New Reservation</Button>
         </Link>
@@ -112,7 +114,7 @@ export function ReservationsListPage() {
                 </TD>
                 <TD>
                   {((isStaff && r.status === "PENDING") ||
-                    ["PENDING", "APPROVED"].includes(r.status)) && (
+                    "PENDING" === r.status) && (
                     <ActionMenu>
                       {isStaff && r.status === "PENDING" && (
                         <>
@@ -133,7 +135,7 @@ export function ReservationsListPage() {
                           </ActionMenuItem>
                         </>
                       )}
-                      {["PENDING", "APPROVED"].includes(r.status) && (
+                      {"PENDING" === r.status && (
                         <ActionMenuItem onClick={() => cancel.mutate(r.id)}>
                           Cancel
                         </ActionMenuItem>

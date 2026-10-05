@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, SlotApprovalStatus, type ReservationType } from '@prisma/client';
+import { AuditAction, ReservationStatus, Role, SlotApprovalStatus, type ReservationType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, conflict, forbidden, notFound } from '../../utils/errors.js';
@@ -25,6 +25,29 @@ function priceStay(slot: { hourlyRate: unknown; dailyRate: unknown }, startAt: D
   const remainderHours = hours - fullDays * 24;
   const total = fullDays * daily + Math.min(remainderHours * hourly, daily);
   return Math.round(total * 100) / 100;
+}
+
+async function assertReservationAccess(
+  req: Request,
+  reservation: { propertyId: string; slotId: string },
+): Promise<void> {
+  if (!req.user) throw forbidden();
+  if (req.user.role === Role.SUPER_ADMIN) return;
+
+  const assignedPropertyId = await getAssignedPropertyId(req.user.id, req.user.role);
+  if (reservation.propertyId !== assignedPropertyId) throw notFound('Reservation not found.');
+
+  if (req.user.role === Role.PROPERTY_OWNER) {
+    const ownedSlot = await prisma.parkingSlot.findFirst({
+      where: {
+        id: reservation.slotId,
+        ownerUserId: req.user.id,
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+    if (!ownedSlot) throw notFound('Reservation not found.');
+  }
 }
 
 export async function createReservation(
@@ -118,8 +141,14 @@ export async function listReservations(filters: {
   const where = {
     deletedAt: null,
     ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
+    ...(req.user!.role === Role.PROPERTY_OWNER
+      ? { slot: { ownerUserId: req.user!.id } }
+      : {}),
     status: filters.status,
-    requestedById: filters.requestedById,
+    requestedById:
+      ['TENANT', 'VISITOR'].includes(req.user!.role)
+        ? req.user!.id
+        : filters.requestedById,
     ...(filters.q
       ? {
           OR: [
@@ -161,7 +190,7 @@ export async function getReservation(id: string, req: Request) {
     },
   });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertRequestPropertyAccess(req, reservation.propertyId);
+  await assertReservationAccess(req, reservation);
   return reservation;
 }
 
@@ -177,7 +206,7 @@ export async function decideReservation(
     include: { requestedBy: true, property: true, slot: true },
   });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertRequestPropertyAccess(req, reservation.propertyId);
+  await assertReservationAccess(req, reservation);
   if (reservation.status !== ReservationStatus.PENDING) {
     throw conflict(`Only pending reservations can be decided (current status: ${reservation.status}).`);
   }
@@ -214,7 +243,7 @@ export async function decideReservation(
 export async function cancelReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertRequestPropertyAccess(req, reservation.propertyId);
+  await assertReservationAccess(req, reservation);
 
   const isOwner = reservation.requestedById === req.user!.id;
   const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
@@ -241,7 +270,7 @@ export async function checkIn(codeOrQr: string, req: Request) {
     where: { OR: [{ code: codeOrQr }, { qrCodeToken: codeOrQr }] },
   });
   if (!reservation) throw notFound('No reservation matches this code.');
-  await assertRequestPropertyAccess(req, reservation.propertyId);
+  await assertReservationAccess(req, reservation);
   if (reservation.status !== ReservationStatus.APPROVED) {
     throw conflict(`Reservation must be APPROVED to check in (current status: ${reservation.status}).`);
   }
@@ -259,7 +288,7 @@ export async function checkIn(codeOrQr: string, req: Request) {
 export async function checkOut(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertRequestPropertyAccess(req, reservation.propertyId);
+  await assertReservationAccess(req, reservation);
   if (reservation.status !== ReservationStatus.CHECKED_IN) {
     throw conflict('Reservation must be CHECKED_IN to check out.');
   }

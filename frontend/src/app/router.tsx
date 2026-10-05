@@ -49,6 +49,7 @@ export const router = createBrowserRouter([
           { path: "/profile", element: <ProfilePage /> },
           { path: "/reservations", element: <ReservationsListPage /> },
           { path: "/reservations/new", element: <NewReservationPage /> },
+          { path: "/parking", element: <ParkingSlotsPage /> },
           {
             element: <RoleGuard roles={ZONE_ROLES} />,
             children: [{ path: "/zones", element: <ZonesPage /> }],
@@ -62,10 +63,6 @@ export const router = createBrowserRouter([
               { path: "/properties", element: <PropertiesListPage /> },
               { path: "/properties/:id", element: <PropertyDetailPage /> },
             ],
-          },
-          {
-            element: <RoleGuard roles={STAFF_ROLES} />,
-            children: [{ path: "/parking", element: <ParkingSlotsPage /> }],
           },
           {
             element: <RoleGuard roles={OWNER_ROLES} />,
