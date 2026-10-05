@@ -37,6 +37,11 @@ export const updateSlotSchema = createSlotSchema.partial().omit({ zoneId: true }
 
 export const slotStatusSchema = z.object({ status: z.nativeEnum(SlotStatus) });
 
+export const reviewSlotSchema = z.object({
+  decision: z.enum(['APPROVED', 'REJECTED']),
+  reason: z.string().trim().optional(),
+});
+
 export const listSlotsQuerySchema = z.object({
   propertyId: z.string().uuid().optional(),
   zoneId: z.string().uuid().optional(),

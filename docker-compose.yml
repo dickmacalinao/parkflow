@@ -33,6 +33,7 @@ services:
     build:
       context: ./backend
       target: dev
+    command: ['sh', '-c', 'npx prisma generate && npm run dev']
     depends_on:
       migrate:
         condition: service_completed_successfully

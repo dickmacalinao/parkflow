@@ -68,6 +68,12 @@ enum SlotStatus {
   INACTIVE
 }
 
+enum SlotApprovalStatus {
+  PENDING_VERIFICATION
+  APPROVED
+  REJECTED
+}
+
 enum ReservationType {
   TENANT
   VISITOR
@@ -303,6 +309,10 @@ model ParkingSlot {
   code         String // e.g. "A-01"
   type         SlotType    @default(STANDARD)
   status       SlotStatus  @default(AVAILABLE)
+  approvalStatus SlotApprovalStatus @default(APPROVED)
+  approvalReason String?
+  approvedAt   DateTime?
+  approvedById String?
   hourlyRate   Decimal?    @db.Decimal(8, 2)
   dailyRate    Decimal     @db.Decimal(8, 2)
   monthlyRate  Decimal?    @db.Decimal(8, 2)

@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, type ReservationType } from '@prisma/client';
+import { AuditAction, ReservationStatus, SlotApprovalStatus, type ReservationType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, conflict, forbidden, notFound } from '../../utils/errors.js';
@@ -41,6 +41,7 @@ export async function createReservation(
     where: {
       id: input.slotId,
       deletedAt: null,
+      approvalStatus: SlotApprovalStatus.APPROVED,
       zone: { propertyId: input.propertyId, deletedAt: null },
     },
   });

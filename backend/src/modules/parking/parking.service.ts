@@ -1,7 +1,7 @@
-import { AuditAction, SlotStatus, type SlotType } from '@prisma/client';
+import { AuditAction, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
-import { notFound } from '../../utils/errors.js';
+import { forbidden, notFound } from '../../utils/errors.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
 
@@ -56,7 +56,17 @@ export async function createSlot(
   req: Request
 ) {
   await assertZoneAccess(req, data.zoneId);
-  const slot = await prisma.parkingSlot.create({ data });
+  const isOwnerSubmission = req.user!.role === 'PROPERTY_OWNER';
+  const slot = await prisma.parkingSlot.create({
+    data: {
+      ...data,
+      approvalStatus: isOwnerSubmission
+        ? SlotApprovalStatus.PENDING_VERIFICATION
+        : SlotApprovalStatus.APPROVED,
+      approvedAt: isOwnerSubmission ? null : new Date(),
+      approvedById: isOwnerSubmission ? null : req.user!.id,
+    },
+  });
   await recordAudit({ req, action: AuditAction.CREATE, entityType: 'ParkingSlot', entityId: slot.id });
   return slot;
 }
@@ -79,6 +89,11 @@ export async function bulkCreateSlots(
       type: input.type,
       dailyRate: input.dailyRate,
       hourlyRate: input.hourlyRate,
+      approvalStatus: req.user!.role === 'PROPERTY_OWNER'
+        ? SlotApprovalStatus.PENDING_VERIFICATION
+        : SlotApprovalStatus.APPROVED,
+      approvedAt: req.user!.role === 'PROPERTY_OWNER' ? null : new Date(),
+      approvedById: req.user!.role === 'PROPERTY_OWNER' ? null : req.user!.id,
     })),
     skipDuplicates: true,
   });
@@ -96,6 +111,7 @@ export async function listSlots(
     : await getAssignedPropertyId(req.user!.id, req.user!.role);
   const where = {
     deletedAt: null,
+    approvalStatus: SlotApprovalStatus.APPROVED,
     zoneId: filters.zoneId,
     status: filters.status,
     type: filters.type,
@@ -117,9 +133,78 @@ export async function listSlots(
   return { rows, total, page: filters.page, pageSize: filters.pageSize };
 }
 
+export async function listMySlots(req: Request) {
+  const propertyId = await getAssignedPropertyId(req.user!.id, req.user!.role);
+  if (!propertyId) throw forbidden('Your account is not assigned to a property.');
+  return prisma.parkingSlot.findMany({
+    where: { deletedAt: null, zone: { propertyId, deletedAt: null } },
+    orderBy: [{ zone: { sortOrder: 'asc' } }, { code: 'asc' }],
+    include: { zone: { select: { id: true, name: true, propertyId: true } } },
+  });
+}
+
+export async function listPendingSlotsForVerification(req: Request) {
+  const propertyId = await getAssignedPropertyId(req.user!.id, req.user!.role);
+  if (!propertyId) throw forbidden('Your account is not assigned to a property.');
+  return prisma.parkingSlot.findMany({
+    where: {
+      deletedAt: null,
+      approvalStatus: SlotApprovalStatus.PENDING_VERIFICATION,
+      zone: { propertyId, deletedAt: null },
+    },
+    orderBy: [{ zone: { sortOrder: 'asc' } }, { code: 'asc' }],
+    include: { zone: { select: { id: true, name: true, propertyId: true } } },
+  });
+}
+
+export async function reviewSlot(id: string, decision: 'APPROVED' | 'REJECTED', reason: string | undefined, req: Request) {
+  await assertSlotAccess(req, id);
+  const slot = await prisma.parkingSlot.findFirst({ where: { id, deletedAt: null } });
+  if (!slot) throw notFound('Parking slot not found.');
+  if (slot.approvalStatus !== SlotApprovalStatus.PENDING_VERIFICATION) {
+    throw notFound('Parking slot is not awaiting verification.');
+  }
+
+  const approvalStatus = decision === 'APPROVED'
+    ? SlotApprovalStatus.APPROVED
+    : SlotApprovalStatus.REJECTED;
+  const updated = await prisma.parkingSlot.update({
+    where: { id },
+    data: {
+      approvalStatus,
+      approvalReason: reason,
+      status: decision === 'APPROVED' ? SlotStatus.AVAILABLE : SlotStatus.INACTIVE,
+      approvedAt: decision === 'APPROVED' ? new Date() : null,
+      approvedById: req.user!.id,
+    },
+  });
+  await recordAudit({
+    req,
+    action: decision === 'APPROVED' ? AuditAction.APPROVE : AuditAction.REJECT,
+    entityType: 'ParkingSlot',
+    entityId: id,
+    description: reason,
+  });
+  return updated;
+}
+
 export async function updateSlot(id: string, data: Record<string, unknown>, req: Request) {
   await assertSlotAccess(req, id);
-  const slot = await prisma.parkingSlot.update({ where: { id }, data });
+  const slot = await prisma.parkingSlot.update({
+    where: { id },
+    data: {
+      ...data,
+      ...(req.user!.role === 'PROPERTY_OWNER'
+        ? {
+            approvalStatus: SlotApprovalStatus.PENDING_VERIFICATION,
+            approvalReason: null,
+            approvedAt: null,
+            approvedById: null,
+            status: SlotStatus.AVAILABLE,
+          }
+        : {}),
+    },
+  });
   await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'ParkingSlot', entityId: id });
   return slot;
 }
@@ -129,6 +214,9 @@ export async function setSlotStatus(id: string, status: SlotStatus, req: Request
   await assertSlotAccess(req, id);
   const slot = await prisma.parkingSlot.findUnique({ where: { id } });
   if (!slot) throw notFound('Slot not found.');
+  if (slot.approvalStatus !== SlotApprovalStatus.APPROVED) {
+    throw notFound('Only approved parking slots can change availability.');
+  }
 
   const updated = await prisma.parkingSlot.update({ where: { id }, data: { status } });
   await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'ParkingSlot', entityId: id, description: `Status -> ${status}` });

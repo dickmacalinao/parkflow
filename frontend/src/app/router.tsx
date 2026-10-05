@@ -11,6 +11,7 @@ import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { PropertiesListPage } from "../features/properties/PropertiesListPage";
 import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
 import { ParkingSlotsPage } from "../features/parking/ParkingSlotsPage";
+import { MyParkingSlotsPage } from "../features/parking/MyParkingSlotsPage";
 import { ZonesPage } from "../features/parking/ZonesPage";
 import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
@@ -26,6 +27,7 @@ const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN"];
 const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ZONE_ROLES = ["PROPERTY_MANAGER"];
+const OWNER_ROLES = ["PROPERTY_OWNER"];
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/dashboard" replace /> },
@@ -64,6 +66,12 @@ export const router = createBrowserRouter([
           {
             element: <RoleGuard roles={STAFF_ROLES} />,
             children: [{ path: "/parking", element: <ParkingSlotsPage /> }],
+          },
+          {
+            element: <RoleGuard roles={OWNER_ROLES} />,
+            children: [
+              { path: "/my-parking-slots", element: <MyParkingSlotsPage /> },
+            ],
           },
           {
             element: <RoleGuard roles={USER_ROLES} />,

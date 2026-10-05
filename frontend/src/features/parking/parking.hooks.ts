@@ -6,8 +6,23 @@ export interface Slot {
   code: string;
   type: string;
   status: string;
+  approvalStatus: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED';
+  approvalReason: string | null;
+  hourlyRate: string | null;
   dailyRate: string;
+  monthlyRate: string | null;
+  isEvCharging: boolean;
   zone: { id: string; name: string; propertyId: string };
+}
+
+export interface SlotInput {
+  zoneId: string;
+  code: string;
+  type: string;
+  hourlyRate?: number;
+  dailyRate: number;
+  monthlyRate?: number;
+  isEvCharging: boolean;
 }
 
 export interface Zone {
@@ -115,5 +130,84 @@ export function useSetSlotStatus() {
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['slots'] }),
+  });
+}
+
+export function useMySlots() {
+  return useQuery({
+    queryKey: ['my-slots'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/parking/slots/mine');
+      return data as Slot[];
+    },
+  });
+}
+
+export function usePendingSlots(enabled = true) {
+  return useQuery({
+    queryKey: ['pending-slots'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/parking/slots/pending-verification');
+      return data as Slot[];
+    },
+    enabled,
+  });
+}
+
+export function useCreateSlot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: SlotInput) => {
+      const { data } = await apiClient.post('/parking/slots', input);
+      return data as Slot;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-slots'] });
+      qc.invalidateQueries({ queryKey: ['pending-slots'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useUpdateSlot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: Partial<Omit<SlotInput, 'zoneId'>> }) => {
+      const { data } = await apiClient.patch(`/parking/slots/${id}`, input);
+      return data as Slot;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-slots'] });
+      qc.invalidateQueries({ queryKey: ['pending-slots'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useDeleteSlot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/parking/slots/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-slots'] });
+      qc.invalidateQueries({ queryKey: ['pending-slots'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useReviewSlot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, decision, reason }: { id: string; decision: 'APPROVED' | 'REJECTED'; reason?: string }) => {
+      const { data } = await apiClient.patch(`/parking/slots/${id}/approval`, { decision, reason });
+      return data as Slot;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pending-slots'] });
+      qc.invalidateQueries({ queryKey: ['slots'] });
+    },
   });
 }

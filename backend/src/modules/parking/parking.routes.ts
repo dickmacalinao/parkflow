@@ -8,6 +8,7 @@ import {
   createSlotSchema,
   createZoneSchema,
   listSlotsQuerySchema,
+  reviewSlotSchema,
   slotStatusSchema,
   updateSlotSchema,
   updateZoneSchema,
@@ -133,6 +134,34 @@ router.post(
  *     responses:
  *       200: { description: Paginated slot list }
  */
+router.get(
+  '/slots/mine',
+  requireAuth,
+  requireRole('PROPERTY_OWNER'),
+  asyncHandler(async (req, res) => {
+    res.json(await parkingService.listMySlots(req));
+  })
+);
+
+router.get(
+  '/slots/pending-verification',
+  requireAuth,
+  requireRole('PROPERTY_MANAGER'),
+  asyncHandler(async (req, res) => {
+    res.json(await parkingService.listPendingSlotsForVerification(req));
+  })
+);
+
+router.patch(
+  '/slots/:id/approval',
+  requireAuth,
+  requireRole('PROPERTY_MANAGER'),
+  validate({ params: idParam, body: reviewSlotSchema }),
+  asyncHandler(async (req, res) => {
+    res.json(await parkingService.reviewSlot(req.params.id, req.body.decision, req.body.reason, req));
+  })
+);
+
 router.get(
   '/slots',
   requireAuth,
