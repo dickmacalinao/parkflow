@@ -47,6 +47,23 @@ export const listSlotsQuerySchema = z.object({
   zoneId: z.string().uuid().optional(),
   status: z.nativeEnum(SlotStatus).optional(),
   type: z.nativeEnum(SlotType).optional(),
+  startAt: z.coerce.date().optional(),
+  endAt: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
+}).superRefine((filters, ctx) => {
+  if (Boolean(filters.startAt) !== Boolean(filters.endAt)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['endAt'],
+      message: 'Start and end are both required for availability checks.',
+    });
+  }
+  if (filters.startAt && filters.endAt && filters.endAt <= filters.startAt) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['endAt'],
+      message: 'End must be after start.',
+    });
+  }
 });

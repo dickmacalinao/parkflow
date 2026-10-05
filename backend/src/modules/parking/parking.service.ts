@@ -1,4 +1,4 @@
-import { AuditAction, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
+import { AuditAction, ReservationStatus, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { forbidden, notFound } from '../../utils/errors.js';
@@ -103,9 +103,10 @@ export async function bulkCreateSlots(
 }
 
 export async function listSlots(
-  filters: { propertyId?: string; zoneId?: string; status?: SlotStatus; type?: SlotType; page: number; pageSize: number },
+  filters: { propertyId?: string; zoneId?: string; status?: SlotStatus; type?: SlotType; startAt?: Date; endAt?: Date; page: number; pageSize: number },
   req: Request,
 ) {
+  const hasDateRange = Boolean(filters.startAt && filters.endAt);
   const assignedPropertyId = req.user?.role === 'SUPER_ADMIN'
     ? filters.propertyId
     : await getAssignedPropertyId(req.user!.id, req.user!.role);
@@ -113,8 +114,27 @@ export async function listSlots(
     deletedAt: null,
     approvalStatus: SlotApprovalStatus.APPROVED,
     zoneId: filters.zoneId,
-    status: filters.status,
+    status: hasDateRange
+      ? { in: [SlotStatus.AVAILABLE, SlotStatus.RESERVED] }
+      : filters.status,
     type: filters.type,
+    ...(hasDateRange ? {
+      reservations: {
+        none: {
+          deletedAt: null,
+          status: {
+            notIn: [
+              ReservationStatus.REJECTED,
+              ReservationStatus.CANCELLED,
+              ReservationStatus.EXPIRED,
+              ReservationStatus.NO_SHOW,
+            ],
+          },
+          startAt: { lt: filters.endAt! },
+          endAt: { gt: filters.startAt! },
+        },
+      },
+    } : {}),
     zone: {
       deletedAt: null,
       ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),

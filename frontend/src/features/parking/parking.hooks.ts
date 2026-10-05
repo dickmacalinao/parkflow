@@ -97,20 +97,25 @@ export function useDeleteZone() {
   });
 }
 
-export function useSlots(propertyId?: string) {
+export function useSlots(
+  propertyId?: string,
+  startAt?: string,
+  endAt?: string,
+  enabled = true,
+) {
   return useQuery({
-    queryKey: ['slots', propertyId],
+    queryKey: ['slots', propertyId, startAt, endAt],
     queryFn: async () => {
       const pageSize = 200;
       const { data: firstPage } = await apiClient.get('/parking/slots', {
-        params: { propertyId, page: 1, pageSize },
+        params: { propertyId, startAt, endAt, page: 1, pageSize },
       });
       const rows = [...firstPage.rows] as Slot[];
       const total = Number(firstPage.total);
 
       for (let page = 2; rows.length < total; page += 1) {
         const { data } = await apiClient.get('/parking/slots', {
-          params: { propertyId, page, pageSize },
+          params: { propertyId, startAt, endAt, page, pageSize },
         });
         if (!data.rows.length) break;
         rows.push(...(data.rows as Slot[]));
@@ -118,7 +123,7 @@ export function useSlots(propertyId?: string) {
 
       return rows;
     },
-    enabled: !!propertyId,
+    enabled: !!propertyId && enabled,
   });
 }
 
