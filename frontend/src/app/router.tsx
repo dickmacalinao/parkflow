@@ -13,7 +13,7 @@ import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
 import { ParkingSlotsPage } from "../features/parking/ParkingSlotsPage";
 import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
-import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
+//import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
 import { AuditLogPage } from "../features/admin/AuditLogPage";
 import { ProfilePage } from "../features/profile/ProfilePage";
@@ -45,8 +45,9 @@ export const router = createBrowserRouter([
           { path: "/profile", element: <ProfilePage /> },
           { path: "/reservations", element: <ReservationsListPage /> },
           { path: "/reservations/new", element: <NewReservationPage /> },
+          /*
           { path: "/visitors", element: <VisitorPassesPage /> },
-
+          */
           {
             element: <RoleGuard roles={PROPERTY_ROLES} />,
             children: [

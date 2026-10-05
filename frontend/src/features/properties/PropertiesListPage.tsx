@@ -29,7 +29,7 @@ const STATUS_TONE: Record<
 
 export function PropertiesListPage() {
   const { user } = useAuth();
-  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [status, setStatus] = useState<string | undefined>("ACTIVE");
   const isDeletedView = status === "DELETED";
   const [formOpen, setFormOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);

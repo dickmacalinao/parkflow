@@ -24,7 +24,7 @@ const EMPTY_PROPERTY: PropertyInput = {
   state: "",
   postalCode: "",
   country: "",
-  timezone: "UTC",
+  timezone: "GMT",
   latitude: "",
   longitude: "",
 };
@@ -65,7 +65,7 @@ export function PropertyFormDialog({
             state: property.state,
             postalCode: property.postalCode ?? "",
             country: property.country,
-            timezone: property.timezone ?? "UTC",
+            timezone: property.timezone ?? "GMT",
             latitude: property.latitude?.toString() ?? "",
             longitude: property.longitude?.toString() ?? "",
           }
@@ -197,6 +197,7 @@ export function PropertyFormDialog({
             {...register("timezone", { required: true })}
           />
         </div>
+        {/*
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="property-latitude">Latitude</Label>
@@ -217,6 +218,7 @@ export function PropertyFormDialog({
             />
           </div>
         </div>
+        */}
       </form>
     </Dialog>
   );
