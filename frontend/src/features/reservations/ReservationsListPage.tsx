@@ -63,14 +63,16 @@ export function ReservationsListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">
-          {user?.role === "TENANT" ? "My Reservations" : "Reservations"}
-        </h1>
-        <Link to="/reservations/new">
-          <Button>New Reservation</Button>
-        </Link>
-      </div>
+      {user?.role !== "SUPER_ADMIN" && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">
+            {user?.role === "TENANT" ? "My Reservations" : "Reservations"}
+          </h1>
+          <Link to="/reservations/new">
+            <Button>New Reservation</Button>
+          </Link>
+        </div>
+      )}
 
       <section
         aria-label="Filter reservations"
