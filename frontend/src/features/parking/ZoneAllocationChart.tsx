@@ -233,7 +233,7 @@ function WeekMonthGrid({
                   key={`${slot.id}-${day.toISOString()}`}
                   title={`${slot.code} — ${day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}${booked ? " (booked)" : ""}`}
                   className={cn(
-                    "bg-card px-1 py-1 text-center text-[9px]",
+                    "h-6 bg-card px-1 py-1 text-center text-[9px]",
                     booked && "bg-amber-500/80",
                     day.getTime() === todayMs && "border-x-2 border-x-red-500",
                   )}

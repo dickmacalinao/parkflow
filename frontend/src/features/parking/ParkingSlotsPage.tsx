@@ -53,8 +53,16 @@ export function ParkingSlotsPage() {
     ? selectedPropertyId
     : (user?.propertyId ?? undefined);
   const { data: slots, isLoading } = useSlots(propertyId);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
+  const [chartDate, setChartDate] = useState(() => new Date());
+  const chartRange = getPeriodRange(chartDate, chartPeriod);
   const { data: reservationsData } = useReservations(
-    { propertyId, pageSize: 100 },
+    {
+      propertyId,
+      from: chartRange.start.toISOString(),
+      to: chartRange.end.toISOString(),
+      pageSize: 100,
+    },
     !!propertyId,
   );
   const { data: pendingSlots, isLoading: pendingSlotsLoading } =
@@ -62,16 +70,10 @@ export function ParkingSlotsPage() {
   const setStatus = useSetSlotStatus();
   const reviewSlot = useReviewSlot();
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
-  const [chartDate, setChartDate] = useState(() => new Date());
-  const chartRange = getPeriodRange(chartDate, chartPeriod);
   const reservationsBySlot = new Map<string, Reservation[]>();
   reservationsData?.rows
-    .filter(
-      (reservation) =>
-        ["APPROVED", "CHECKED_IN"].includes(reservation.status) &&
-        new Date(reservation.startAt).getTime() < chartRange.end.getTime() &&
-        new Date(reservation.endAt).getTime() > chartRange.start.getTime(),
+    .filter((reservation) =>
+      ["APPROVED", "CHECKED_IN"].includes(reservation.status),
     )
     .forEach((reservation) => {
       const list = reservationsBySlot.get(reservation.slot.id) ?? [];

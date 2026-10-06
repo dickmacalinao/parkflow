@@ -160,6 +160,8 @@ export async function listReservations(filters: {
   status?: ReservationStatus;
   requestedById?: string;
   q?: string;
+  from?: Date;
+  to?: Date;
   page: number;
   pageSize: number;
 }, req: Request) {
@@ -177,6 +179,16 @@ export async function listReservations(filters: {
       ['TENANT', 'VISITOR'].includes(req.user!.role)
         ? req.user!.id
         : filters.requestedById,
+    // Date-range overlap filter (used by the allocation chart): reservation starts before the
+    // window ends and ends after the window starts.
+    ...(filters.from || filters.to
+      ? {
+          AND: [
+            ...(filters.from ? [{ endAt: { gt: filters.from } }] : []),
+            ...(filters.to ? [{ startAt: { lt: filters.to } }] : []),
+          ],
+        }
+      : {}),
     ...(filters.q
       ? {
           OR: [

@@ -27,6 +27,8 @@ export const listReservationsQuerySchema = z.object({
   status: z.nativeEnum(ReservationStatus).optional(),
   requestedById: z.string().uuid().optional(),
   q: z.string().trim().optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
