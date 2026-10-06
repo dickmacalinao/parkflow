@@ -65,6 +65,33 @@ auto-generate them):
 `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` are set to `generateValue: true` — Render generates
 strong random values on first deploy; you never have to pick them yourself.
 
+### Troubleshooting: emails aren't sending
+
+Check the backend logs first — `lib/email.ts` logs every send attempt (success, provider
+rejection, or "not configured"), so the log line tells you which of these you're hitting:
+
+| Log line | Meaning | Fix |
+|---|---|---|
+| `Email not sent: no RESEND_API_KEY configured ...` | `RESEND_API_KEY` is missing from the environment | Set it locally in `backend/.env`, and in Render's dashboard (it's `sync: false` in `render.yaml` — Render never generates or sets it for you) |
+| `Resend rejected an email send` (with an `error` object) | The API key reached Resend, but Resend refused the send | See below — almost always a domain or recipient issue, not a code problem |
+| `Failed to reach Resend` | Network-level failure before Resend responded | Transient; check Resend's status page if persistent |
+| No log line at all | Your code isn't calling `sendEmail` on this path, or the request isn't reaching the backend | Confirm the request actually hit the endpoint (check for its `METHOD /path -> status` access log line) |
+
+The two most common causes of a `Resend rejected an email send` error:
+
+1. **`EMAIL_FROM` uses an unverified domain.** The default, `ParkFlow <no-reply@parkflow.app>`,
+   is a placeholder — `parkflow.app` isn't a domain you own, so Resend will refuse to send from
+   it. In the Resend dashboard, add and DNS-verify your real sending domain, then set `EMAIL_FROM`
+   to an address on it. To test quickly without DNS setup, use Resend's sandbox sender
+   (`EMAIL_FROM="ParkFlow <onboarding@resend.dev>"`) — but it only delivers to the email address
+   your Resend account itself is registered with, so register/reset-password using that address
+   while testing.
+2. **Recipient restricted by an unverified domain.** Same root cause as above, surfaced as a
+   recipient-side rejection instead. You need to register the domain in Resend Dashboard -> Domains
+
+Resend's dashboard has an "Emails" log showing the delivery status and exact rejection reason for
+every send attempt — check it directly if the backend log's `error` object isn't clear enough.
+
 ## 4. Frontend: Cloudflare Pages
 
 1. In the Cloudflare dashboard: Pages → Create a project → Connect to Git → select this repo.
