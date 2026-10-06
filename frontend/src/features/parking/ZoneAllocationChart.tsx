@@ -81,17 +81,18 @@ const STATUS_STYLES: Record<string, { bar: string; label: string }> = {
     label: "Available",
   },
   RESERVED: { bar: "bg-amber-500", label: "Reserved" },
-  OCCUPIED: { bar: "bg-primary", label: "Occupied" },
-  BLOCKED: { bar: "bg-muted-foreground/30", label: "Blocked" },
-  INACTIVE: { bar: "bg-muted", label: "Inactive" },
+  //OCCUPIED: { bar: "bg-primary", label: "Occupied" },
+  //BLOCKED: { bar: "bg-muted-foreground/30", label: "Blocked" },
+  //INACTIVE: { bar: "bg-muted", label: "Inactive" },
 };
 
 export const ALLOCATION_LEGEND = [
   ...Object.values(STATUS_STYLES),
+  /*  
   {
     bar: "bg-amber-500 ring-2 ring-foreground/60",
     label: "Allocated in period",
-  },
+  },*/
   { bar: "bg-red-500", label: "Now" },
 ];
 
@@ -233,8 +234,9 @@ function WeekMonthGrid({
                   key={`${slot.id}-${day.toISOString()}`}
                   title={`${slot.code} — ${day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}${booked ? " (booked)" : ""}`}
                   className={cn(
-                    "h-6 bg-card px-1 py-1 text-center text-[9px]",
+                    "h-6 px-1 py-1 text-center text-[9px]",
                     booked && "bg-amber-500/80",
+                    !booked && "bg-card",
                     day.getTime() === todayMs && "border-x-2 border-x-red-500",
                   )}
                 />

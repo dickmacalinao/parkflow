@@ -334,17 +334,19 @@ export function ParkingSlotsPage() {
               .sort(([, first], [, second]) =>
                 first.name.localeCompare(second.name),
               )
-              .map(([zoneId, zone]) => (
-                <ZoneAllocationChart
-                  key={zoneId}
-                  zoneName={zone.name}
-                  slots={zone.slots}
-                  reservationsBySlot={reservationsBySlot}
-                  period={chartPeriod}
-                  range={chartRange}
-                />
+              .map(([zoneId, zone]) => (                
+                <div className="border-b border-border pb-3 mb-5">
+                  <ZoneAllocationChart
+                    key={zoneId}
+                    zoneName={zone.name}
+                    slots={zone.slots}
+                    reservationsBySlot={reservationsBySlot}
+                    period={chartPeriod}
+                    range={chartRange}
+                  />
+                </div>
               ))}
-            <div className="flex flex-wrap gap-4 border-t border-border pt-3">
+            <div className="flex flex-wrap gap-4">
               {ALLOCATION_LEGEND.map((item) => (
                 <span
                   key={item.label}
