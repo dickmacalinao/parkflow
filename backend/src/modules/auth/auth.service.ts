@@ -214,15 +214,36 @@ export async function forgotPassword(email: string): Promise<void> {
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const user = await prisma.user.findUnique({ where: { passwordResetToken: token } });
-  if (!user || !user.passwordResetExpiresAt || user.passwordResetExpiresAt < new Date()) {
+  // The token may come from the forgot-password flow (passwordResetToken) or from a user
+  // invite (emailVerificationToken), where the link leads to the same "choose a password" page.
+  const user =
+    (await prisma.user.findUnique({ where: { passwordResetToken: token } })) ??
+    (await prisma.user.findUnique({ where: { emailVerificationToken: token } }));
+  if (!user) throw badRequest('This reset link is invalid or has expired.');
+
+  const isInviteToken = user.emailVerificationToken === token;
+  const expiresAt = isInviteToken ? user.emailVerificationExpiresAt : user.passwordResetExpiresAt;
+  if (!expiresAt || expiresAt < new Date()) {
     throw badRequest('This reset link is invalid or has expired.');
   }
 
   const passwordHash = await hashPassword(newPassword);
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null },
+    data: {
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpiresAt: null,
+      // An invite doubles as email verification: set their first password => activate the account.
+      ...(isInviteToken
+        ? {
+            emailVerificationToken: null,
+            emailVerificationExpiresAt: null,
+            emailVerifiedAt: new Date(),
+            status: UserStatus.ACTIVE,
+          }
+        : {}),
+    },
   });
 
   // Invalidate every existing session: a password reset should log the user out everywhere.
