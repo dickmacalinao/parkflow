@@ -26,6 +26,7 @@ export const listReservationsQuerySchema = z.object({
   propertyId: z.string().uuid().optional(),
   status: z.nativeEnum(ReservationStatus).optional(),
   requestedById: z.string().uuid().optional(),
+  ownerUserId:  z.string().uuid().optional(),
   isMine: z.string().trim().optional(),
   q: z.string().trim().optional(),
   from: z.coerce.date().optional(),

@@ -159,7 +159,7 @@ export async function listReservations(filters: {
   propertyId?: string;
   status?: ReservationStatus;
   requestedById?: string;
-  isMine?: string;
+  ownerUserId?: string;
   q?: string;
   from?: Date;
   to?: Date;
@@ -173,8 +173,13 @@ export async function listReservations(filters: {
   const where = {
     deletedAt: null,
     ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
+    /*
     ...(req.user!.role === Role.PROPERTY_OWNER && !filters.isMine
       ? { slot: { ownerUserId: req.user!.id } }
+      : {}),
+    */
+    ...(filters.ownerUserId
+      ? { slot: { ownerUserId: filters.ownerUserId } }
       : {}),
     status: filters.status,
     requestedById: filters.requestedById,

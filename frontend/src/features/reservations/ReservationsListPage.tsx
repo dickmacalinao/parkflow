@@ -63,6 +63,8 @@ export function ReservationsListPage({
 
   const { data, isLoading } = useReservations({
     isMine: mine || undefined,
+    ownerUserId:
+      !mine && user?.role === "PROPERTY_OWNER" ? user?.id : undefined,
     status: statusFilter || undefined,
     requestedById:
       ((mine ? user?.id : undefined) ?? requestedByFilter) || undefined,

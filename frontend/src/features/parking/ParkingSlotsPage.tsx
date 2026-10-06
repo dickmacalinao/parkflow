@@ -58,7 +58,6 @@ export function ParkingSlotsPage() {
   const chartRange = getPeriodRange(chartDate, chartPeriod);
   const { data: reservationsData } = useReservations(
     {
-      isStaff: true,
       propertyId,
       from: chartRange.start.toISOString(),
       to: chartRange.end.toISOString(),
