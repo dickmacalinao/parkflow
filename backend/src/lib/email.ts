@@ -57,9 +57,13 @@ export const emailTemplates = {
     subject: 'You have been invited to ParkFlow',
     html: `<p>Hi ${name},</p><p>You've been invited to join ParkFlow as a ${capitalize(role)}. Accept your invitation:</p><p><a href="${link}">${link}</a></p><p><p>Best regards,<br/>ParkFlow</p></p>`,
   }),
+  createReservation: (propertyOwnerName: string, propertyName: string, slotCode: string, link: string) => ({
+    subject: 'Parking reservation request',
+    html: `<p>Hi ${propertyOwnerName},</p><p>A reservation for slot ${slotCode} at ${propertyName} was <strong>requested</strong>. Kindly approve or reject via <a href="${link}">Parkflow</a>.</p><p><p>Best regards,<br/>ParkFlow</p></p>`,
+  }),
   reservationDecision: (name: string, approved: boolean, propertyName: string, slotCode: string) => ({
     subject: approved ? 'Your parking reservation was approved' : 'Your parking reservation was rejected',
-    html: `<p>Hi ${name},</p><p>Your reservation for bay ${slotCode} at ${propertyName} was <strong>${
+    html: `<p>Hi ${name},</p><p>Your reservation for slot ${slotCode} at ${propertyName} was <strong>${
       approved ? 'approved' : 'rejected'
     }</strong>.</p><p><p>Best regards,<br/>ParkFlow</p></p>`,
   }),

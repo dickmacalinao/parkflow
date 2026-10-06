@@ -6,6 +6,7 @@ import { generateOpaqueToken } from '../../utils/tokens.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { emailTemplates, sendEmail } from '../../lib/email.js';
 import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
+import { env } from '../../config/env.js';
 
 function generateCode(): string {
   return 'RES-' + generateOpaqueToken().slice(0, 8).toUpperCase();
@@ -57,7 +58,7 @@ export async function createReservation(
   await assertRequestPropertyAccess(req, input.propertyId, false);
   const property = await prisma.property.findFirst({
     where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!property) throw badRequest('Reservations are available only at active properties.');
   const slot = await prisma.parkingSlot.findFirst({
@@ -113,6 +114,33 @@ export async function createReservation(
     });
 
     await prisma.parkingSlot.update({ where: { id: input.slotId }, data: { status: 'RESERVED' } });
+
+    const slotOwner = await prisma.user.findUnique({
+      where: { id: slot.ownerUserId as string },
+      select: {
+        firstName: true,
+        email: true,
+      },
+    });
+    if (!slotOwner) throw notFound('User not found.');
+
+    const slotDetails = await prisma.parkingSlot.findUnique({
+      where: { id: input.slotId },
+      select: {
+        code: true,
+      },
+    });
+    if (!slotDetails) throw notFound('Parking slot not found.');
+
+    const link = env.CLIENT_URL;
+    const tpl = emailTemplates.createReservation(
+      slotOwner.firstName,
+      property.name,
+      slotDetails.code,
+      link
+    );
+    await sendEmail({ to: slotOwner.email, ...tpl });
+
     await recordAudit({ req, action: AuditAction.CREATE, entityType: 'Reservation', entityId: reservation.id, propertyId: input.propertyId });
 
     return reservation;
