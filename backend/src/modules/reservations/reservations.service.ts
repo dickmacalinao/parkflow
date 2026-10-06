@@ -167,7 +167,6 @@ export async function listReservations(filters: {
   pageSize: number;
 }, req: Request) {
 
-  console.log("filters", filters);
   const assignedPropertyId = req.user?.role === 'SUPER_ADMIN'
     ? filters.propertyId
     : await getAssignedPropertyId(req.user!.id, req.user!.role);
