@@ -82,7 +82,7 @@ const STATUS_STYLES: Record<string, { bar: string; label: string }> = {
   },
   RESERVED: { bar: "bg-amber-500", label: "Reserved" },
   //OCCUPIED: { bar: "bg-primary", label: "Occupied" },
-  //BLOCKED: { bar: "bg-muted-foreground/30", label: "Blocked" },
+  BLOCKED: { bar: "bg-muted-foreground/30", label: "Blocked" },
   //INACTIVE: { bar: "bg-muted", label: "Inactive" },
 };
 
@@ -117,14 +117,20 @@ function DayTimeline({ slots, reservationsBySlot, range }: DayTimelineProps) {
             <span className="w-16 shrink-0 truncate text-xs font-medium">
               {slot.code}
             </span>
-            <div className="relative h-6 flex-1 overflow-hidden rounded bg-muted/40">
+            <div
+              className={cn(
+                "relative h-6 flex-1 overflow-hidden rounded",
+                slot.status === "BLOCKED" && "bg-muted-foreground/30",
+                slot.status !== "BLOCKED" && "bg-muted/40",
+              )}
+            >
               {reservations.map((r) => {
                 const start = new Date(r.startAt).getTime();
                 const end = new Date(r.endAt).getTime();
                 const left = Math.max(0, ((start - dayStart) / DAY_MS) * 100);
                 const width =
                   Math.min(100, ((end - dayStart) / DAY_MS) * 100) - left;
-                if (width <= 0) return null;
+                if (width <= 0) return <div>X</div>;
                 return (
                   <div
                     key={r.id}
@@ -237,6 +243,7 @@ function WeekMonthGrid({
                     "h-6 px-1 py-1 text-center text-[9px]",
                     booked && "bg-amber-500/80",
                     !booked && "bg-card",
+                    slot.status === "BLOCKED" && "bg-muted-foreground/30",
                     day.getTime() === todayMs && "border-x-2 border-x-red-500",
                   )}
                 />
