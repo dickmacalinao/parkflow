@@ -47,7 +47,18 @@ const NAV: NavItem[] = [
     icon: ParkingSquare,
     roles: ["PROPERTY_OWNER"],
   },
-  { to: "/reservations", label: "Reservations", icon: CalendarCheck },
+  {
+    to: "/reservations",
+    label: "Reservations",
+    icon: CalendarCheck,
+    roles: ["SUPER_ADMIN", "PROPERTY_MANAGER", "PROPERTY_OWNER"],
+  },
+  {
+    to: "/my-reservations",
+    label: "My Reservations",
+    icon: CalendarCheck,
+    roles: ["PROPERTY_OWNER", "TENANT"],
+  },
   // { to: "/visitors", label: "Visitor Passes", icon: Ticket },
   {
     to: "/admin/users",

@@ -177,9 +177,6 @@ export function MyParkingSlotsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">My Parking Slots</h1>
-          {property && (
-            <p className="text-sm text-muted-foreground">{property.name}</p>
-          )}
         </div>
         <Button onClick={openCreate} disabled={!zones?.length}>
           Register Parking Slot

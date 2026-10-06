@@ -46,7 +46,14 @@ export const router = createBrowserRouter([
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
           { path: "/profile", element: <ProfilePage /> },
-          { path: "/reservations", element: <ReservationsListPage /> },
+          {
+            path: "/reservations",
+            element: <ReservationsListPage mine={false} />,
+          },
+          {
+            path: "/my-reservations",
+            element: <ReservationsListPage mine={true} />,
+          },
           { path: "/reservations/new", element: <NewReservationPage /> },
           { path: "/parking", element: <ParkingSlotsPage /> },
           {

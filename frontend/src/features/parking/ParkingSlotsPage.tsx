@@ -58,6 +58,7 @@ export function ParkingSlotsPage() {
   const chartRange = getPeriodRange(chartDate, chartPeriod);
   const { data: reservationsData } = useReservations(
     {
+      isStaff: true,
       propertyId,
       from: chartRange.start.toISOString(),
       to: chartRange.end.toISOString(),
@@ -334,7 +335,7 @@ export function ParkingSlotsPage() {
               .sort(([, first], [, second]) =>
                 first.name.localeCompare(second.name),
               )
-              .map(([zoneId, zone]) => (                
+              .map(([zoneId, zone]) => (
                 <div className="border-b border-border pb-3 mb-5">
                   <ZoneAllocationChart
                     key={zoneId}

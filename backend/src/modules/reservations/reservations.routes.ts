@@ -38,7 +38,7 @@ router.post(
  * @openapi
  * /api/reservations:
  *   get:
- *     summary: List reservations (own reservations for tenants/visitors, all for staff)
+ *     summary: List reservations (all reservations)
  *     tags: [Reservations]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -48,11 +48,31 @@ router.get(
   '/',
   requireAuth,
   validate({ query: listReservationsQuerySchema }),
+  asyncHandler(async (req, res) => {    
+    const filters = req.query as unknown as z.infer<typeof listReservationsQuerySchema>;    
+    res.json(await reservationsService.listReservations(filters, req));
+  })
+);
+
+/**
+ * @openapi
+ * /api/reservations/mine:
+ *   get:
+ *     summary: List reservations (own reservations for tenants/visitors)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated reservation list }
+ */
+router.get(
+  '/mine',
+  requireAuth,
+  validate({ query: listReservationsQuerySchema }),
   asyncHandler(async (req, res) => {
     const isStaff = (STAFF_ROLES as readonly string[]).includes(req.user!.role);
     const filters = req.query as unknown as z.infer<typeof listReservationsQuerySchema>;
     // Non-staff users can only ever see their own reservations, regardless of what they pass in requestedById.
-    const scoped = isStaff ? filters : { ...filters, requestedById: req.user!.id };
+    const scoped = isStaff ? filters : { ...filters, isMine: true, requestedById: req.user!.id };
     res.json(await reservationsService.listReservations(scoped, req));
   })
 );
