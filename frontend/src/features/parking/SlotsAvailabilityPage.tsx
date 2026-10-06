@@ -41,7 +41,7 @@ const STATUS_TONE: Record<
   INACTIVE: "muted",
 };
 
-export function ParkingSlotsPage() {
+export function SlotsAvailabilityPage() {
   const { user } = useAuth();
   const { data: properties } = useProperties();
   const [selectedPropertyId, setSelectedPropertyId] = useState<
@@ -111,7 +111,7 @@ export function ParkingSlotsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center">
-        <h1 className="text-2xl font-semibold mr-3">Parking Slots</h1>
+        <h1 className="text-2xl font-semibold mr-3">Slots Availability</h1>
         {isSuperAdmin && (
           <Select
             className="w-64"

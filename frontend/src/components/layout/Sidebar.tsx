@@ -3,8 +3,10 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
+  Check,
   ParkingSquare,
   CalendarCheck,
+  CalendarDays,
   Users,
   ShieldCheck,
   UserRound,
@@ -37,9 +39,9 @@ const NAV: NavItem[] = [
     roles: ["SUPER_ADMIN"],
   },
   {
-    to: "/parking",
-    label: "Parking Slots",
-    icon: ParkingSquare,
+    to: "/availability",
+    label: "Slots Availability",
+    icon: Check,
   },
   {
     to: "/my-parking-slots",
@@ -56,7 +58,7 @@ const NAV: NavItem[] = [
   {
     to: "/my-reservations",
     label: "My Reservations",
-    icon: CalendarCheck,
+    icon: CalendarDays,
     roles: ["PROPERTY_OWNER", "TENANT"],
   },
   // { to: "/visitors", label: "Visitor Passes", icon: Ticket },

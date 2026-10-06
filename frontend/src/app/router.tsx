@@ -10,7 +10,7 @@ import { VerifyEmailPage } from "../features/auth/VerifyEmailPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { PropertiesListPage } from "../features/properties/PropertiesListPage";
 import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
-import { ParkingSlotsPage } from "../features/parking/ParkingSlotsPage";
+import { SlotsAvailabilityPage } from "../features/parking/SlotsAvailabilityPage";
 import { MyParkingSlotsPage } from "../features/parking/MyParkingSlotsPage";
 import { ZonesPage } from "../features/parking/ZonesPage";
 import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
@@ -55,7 +55,7 @@ export const router = createBrowserRouter([
             element: <ReservationsListPage mine={true} />,
           },
           { path: "/reservations/new", element: <NewReservationPage /> },
-          { path: "/parking", element: <ParkingSlotsPage /> },
+          { path: "/availability", element: <SlotsAvailabilityPage /> },
           {
             element: <RoleGuard roles={ZONE_ROLES} />,
             children: [{ path: "/zones", element: <ZonesPage /> }],
