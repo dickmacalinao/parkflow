@@ -37,12 +37,18 @@ function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   return Math.round(amount * 100) / 100;
 }
 
-export function NewReservationPage() {
+export interface NewReservationPageProps {
+  reservationId?: string;
+}
+
+export function NewReservationPage({ reservationId }: NewReservationPageProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const propertyId = user?.propertyId ?? undefined;
   const create = useCreateReservation();
+
+  //console.log("reservationId:", reservationId);
 
   const {
     register,

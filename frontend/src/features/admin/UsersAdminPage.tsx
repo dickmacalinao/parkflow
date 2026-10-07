@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useNavigate } from "react-router";
 import {
   useAssignUserProperty,
   useInviteUser,
@@ -36,6 +37,7 @@ const STATUS_TONE: Record<
 
 export function UsersAdminPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [propertyFilter, setPropertyFilter] = useState("");
@@ -83,6 +85,10 @@ export function UsersAdminPage() {
     reset: resetAssignment,
     formState: { isSubmitting: isAssigning },
   } = useForm<{ propertyId: string }>();
+
+  const viewUser = ({ userId }: { userId: string }) => {
+    navigate(`/admin/users/${userId}`);
+  };
 
   const openAssignment = (target: AdminUser) => {
     setError(null);
@@ -278,6 +284,16 @@ export function UsersAdminPage() {
                     u.status === "SUSPENDED" ||
                     (u.role !== "SUPER_ADMIN" && u.status === "ACTIVE") ? (
                       <ActionMenu>
+                        {["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(
+                          user?.role,
+                        ) &&
+                          u.role !== "SUPER_ADMIN" && (
+                            <ActionMenuItem
+                              onClick={() => viewUser({ userId: u.id })}
+                            >
+                              View
+                            </ActionMenuItem>
+                          )}
                         {u.status === "PENDING_VERIFICATION" &&
                           (user?.role === "SUPER_ADMIN" ||
                             u.id !== user?.id) && (

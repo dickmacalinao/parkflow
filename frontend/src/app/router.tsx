@@ -18,6 +18,7 @@ import { MyReservationsPage } from "../features/reservations/MyReservationsPage"
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
+import { UserProfilePage } from "@/features/profile/UserProfilePage";
 import { AuditLogPage } from "../features/admin/AuditLogPage";
 import { ProfilePage } from "../features/profile/ProfilePage";
 import { UnauthorizedPage } from "./UnauthorizedPage";
@@ -25,7 +26,6 @@ import { NotFoundPage } from "./NotFoundPage";
 
 const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN"];
-const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ZONE_ROLES = ["PROPERTY_MANAGER"];
 const OWNER_ROLES = ["PROPERTY_OWNER"];
 
@@ -78,9 +78,16 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            element: <RoleGuard roles={USER_ROLES} />,
+            element: <RoleGuard roles={PROPERTY_ROLES} />,
             children: [{ path: "/admin/users", element: <UsersAdminPage /> }],
           },
+          {
+            element: <RoleGuard roles={PROPERTY_ROLES} />,
+            children: [
+              { path: "/admin/users/:userId", element: <UserProfilePage /> },
+            ],
+          },
+
           {
             element: <RoleGuard roles={ADMIN_ROLES} />,
             children: [

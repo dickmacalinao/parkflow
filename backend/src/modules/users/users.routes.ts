@@ -13,6 +13,7 @@ import {
 import * as usersService from './users.service.js';
 
 const router = Router();
+const idParam = z.object({ id: z.string().uuid() });
 
 /**
  * @openapi
@@ -67,6 +68,26 @@ router.get(
       req.query as unknown as z.infer<typeof listUsersQuerySchema>,
       req.user!,
     ));
+  })
+);
+
+/**
+ * @openapi
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get one user by ID
+ *     tags: [Users]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: User detail }
+ *       404: { description: Not found }
+ */
+router.get(
+  '/:id',
+  requireAuth,
+  validate({ params: idParam }),
+  asyncHandler(async (req, res) => {    
+    res.json(await usersService.getProfile(req.params.id));
   })
 );
 

@@ -13,18 +13,16 @@ import { Label } from "../../components/ui/Label";
 import { useAuth } from "../../context/AuthContext";
 import { apiClient, getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
+import { ProfileFields } from "./profile.hooks";
+import { type StoredUser } from "../../lib/authStorage";
 
-interface ProfileFields {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  avatarUrl: string;
-  buildingNo: string;
-  floorNo: string;
-  unitNo: string;
-}
-
-export function ProfilePage() {
+export function ProfilePage({
+  userProfile,
+  isLoading,
+}: {
+  userProfile?: StoredUser;
+  isLoading: boolean;
+}) {
   const { user, setUser } = useAuth();
   const { data: properties } = useProperties();
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +31,9 @@ export function ProfilePage() {
     (property) => property.id === user?.propertyId,
   );
   const showCondoAddress =
-    ["TENANT", "PROPERTY_OWNER"].includes(user?.role ?? "") &&
-    assignedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
+    ["TENANT", "PROPERTY_OWNER"].includes(
+      userProfile?.role ?? user?.role ?? "",
+    ) && assignedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
   const {
     register,
     handleSubmit,
@@ -43,16 +42,21 @@ export function ProfilePage() {
   } = useForm<ProfileFields>();
 
   useEffect(() => {
-    reset({
-      firstName: user?.firstName ?? "",
-      lastName: user?.lastName ?? "",
-      phone: user?.phone ?? "",
-      avatarUrl: user?.avatarUrl ?? "",
-      buildingNo: user?.buildingNo ?? "",
-      floorNo: user?.floorNo ?? "",
-      unitNo: user?.unitNo ?? "",
-    });
-  }, [user, reset]);
+    if (!isLoading) {
+      reset({
+        firstName:
+          (userProfile ? userProfile?.firstName : user?.firstName) ?? "",
+        lastName: (userProfile ? userProfile?.lastName : user?.lastName) ?? "",
+        phone: (userProfile ? userProfile?.phone : user?.phone) ?? "",
+        avatarUrl:
+          (userProfile ? userProfile?.avatarUrl : user?.avatarUrl) ?? "",
+        buildingNo:
+          (userProfile ? userProfile?.buildingNo : user?.buildingNo) ?? "",
+        floorNo: (userProfile ? userProfile?.floorNo : user?.floorNo) ?? "",
+        unitNo: (userProfile ? userProfile.unitNo : user?.unitNo) ?? "",
+      });
+    }
+  }, [user, reset, userProfile, isLoading]);
 
   const onSubmit = async (fields: ProfileFields) => {
     setError(null);
@@ -69,8 +73,10 @@ export function ProfilePage() {
           unitNo: fields.unitNo.trim() || null,
         }),
       };
-      const { data } = await apiClient.patch("/users/me", profileUpdate);
-      setUser(data);
+      if (!userProfile) {
+        const { data } = await apiClient.patch("/users/me", profileUpdate);
+        setUser(data);
+      }
       setSuccess(true);
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -80,7 +86,9 @@ export function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold">My Profile</h1>
+        <h1 className="text-2xl font-semibold">
+          {userProfile ? "User Profile" : "My Profile"}
+        </h1>
         <p className="text-sm text-muted-foreground">{user?.email}</p>
       </div>
 
@@ -156,11 +164,13 @@ export function ProfilePage() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end">
-              <Button type="submit" isLoading={isSubmitting}>
-                Save Profile
-              </Button>
-            </div>
+            {!userProfile && (
+              <div className="flex justify-end">
+                <Button type="submit" isLoading={isSubmitting}>
+                  Save Profile
+                </Button>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
