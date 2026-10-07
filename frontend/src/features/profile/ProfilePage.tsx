@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
+import { TextInput } from "../../components/ui/TextInput";
 import { Label } from "../../components/ui/Label";
 import { useAuth } from "../../context/AuthContext";
 import { apiClient, getApiErrorMessage } from "../../lib/apiClient";
@@ -48,6 +49,8 @@ export function ProfilePage({
           (userProfile ? userProfile?.firstName : user?.firstName) ?? "",
         lastName: (userProfile ? userProfile?.lastName : user?.lastName) ?? "",
         phone: (userProfile ? userProfile?.phone : user?.phone) ?? "",
+        paymentInfo:
+          (userProfile ? userProfile?.paymentInfo : user?.paymentInfo) ?? "",
         avatarUrl:
           (userProfile ? userProfile?.avatarUrl : user?.avatarUrl) ?? "",
         buildingNo:
@@ -66,6 +69,7 @@ export function ProfilePage({
         firstName: fields.firstName,
         lastName: fields.lastName,
         phone: fields.phone.trim() || null,
+        paymentInfo: fields.paymentInfo.trim() || null,
         avatarUrl: fields.avatarUrl.trim() || null,
         ...(showCondoAddress && {
           buildingNo: fields.buildingNo.trim() || null,
@@ -73,10 +77,8 @@ export function ProfilePage({
           unitNo: fields.unitNo.trim() || null,
         }),
       };
-      if (!userProfile) {
-        const { data } = await apiClient.patch("/users/me", profileUpdate);
-        setUser(data);
-      }
+      const { data } = await apiClient.patch("/users/me", profileUpdate);
+      setUser(data);
       setSuccess(true);
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -129,10 +131,23 @@ export function ProfilePage({
                 {...register("phone")}
               />
             </div>
-            <div>
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input id="avatarUrl" type="url" {...register("avatarUrl")} />
-            </div>
+            {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
+              <div>
+                <Label htmlFor="paymentInfo">Payment Information</Label>
+                <TextInput
+                  id="paymentInfo"
+                  required
+                  {...register("paymentInfo")}
+                />
+                <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                  <p className="text-sm font-medium">
+                    Sample Payment Information
+                  </p>
+                  <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
+                  <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
+                </div>
+              </div>
+            )}
             {showCondoAddress && (
               <div className="space-y-3 border-t border-border pt-4">
                 <h3 className="font-medium">Property address</h3>
@@ -164,6 +179,10 @@ export function ProfilePage({
                 </div>
               </div>
             )}
+            <div>
+              <Label htmlFor="avatarUrl">Avatar URL</Label>
+              <Input id="avatarUrl" type="url" {...register("avatarUrl")} />
+            </div>
             {!userProfile && (
               <div className="flex justify-end">
                 <Button type="submit" isLoading={isSubmitting}>
