@@ -129,7 +129,7 @@ export function NewReservationPage() {
         startAt: new Date(data.startAt).toISOString(),
         endAt: new Date(data.endAt).toISOString(),
       });
-      navigate("/reservations");
+      navigate("/my-reservations");
     } catch (err) {
       setServerError(
         getApiErrorMessage(err, "Could not create the reservation."),
@@ -254,7 +254,7 @@ export function NewReservationPage() {
               <Label htmlFor="plateNumber">Vehicle plate no. (optional)</Label>
               <Input
                 id="plateNumber"
-                placeholder="e.g. ABC 1234"
+                placeholder="e.g. ABC 123"
                 {...register("plateNumber")}
               />
               <FormError message={errors.plateNumber?.message} />

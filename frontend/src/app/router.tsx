@@ -13,7 +13,8 @@ import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
 import { SlotsAvailabilityPage } from "../features/parking/SlotsAvailabilityPage";
 import { MyParkingSlotsPage } from "../features/parking/MyParkingSlotsPage";
 import { ZonesPage } from "../features/parking/ZonesPage";
-import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
+import { ReservationsPage } from "../features/reservations/ReservationsPage";
+import { MyReservationsPage } from "../features/reservations/MyReservationsPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
@@ -48,13 +49,13 @@ export const router = createBrowserRouter([
           { path: "/profile", element: <ProfilePage /> },
           {
             path: "/reservations",
-            element: <ReservationsListPage mine={false} />,
+            element: <ReservationsPage />,
           },
           {
             path: "/my-reservations",
-            element: <ReservationsListPage mine={true} />,
+            element: <MyReservationsPage />,
           },
-          { path: "/reservations/new", element: <NewReservationPage /> },
+          { path: "/my-reservations/new", element: <NewReservationPage /> },
           { path: "/availability", element: <SlotsAvailabilityPage /> },
           {
             element: <RoleGuard roles={ZONE_ROLES} />,

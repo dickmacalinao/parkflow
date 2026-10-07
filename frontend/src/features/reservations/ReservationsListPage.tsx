@@ -80,7 +80,7 @@ export function ReservationsListPage({
           {mine ? "My Reservations" : "Reservations"}
         </h1>
         {mine && (
-          <Link to="/reservations/new">
+          <Link to="/my-reservations/new">
             <Button>New Reservation</Button>
           </Link>
         )}
