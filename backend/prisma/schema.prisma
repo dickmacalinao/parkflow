@@ -166,6 +166,7 @@ model User {
   lastName         String
   phone            String?
   avatarUrl        String?
+  paymentInfo      String?
   role             Role
   status           UserStatus @default(PENDING_VERIFICATION)
   propertyId       String?

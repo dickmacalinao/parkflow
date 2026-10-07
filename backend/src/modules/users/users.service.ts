@@ -15,6 +15,7 @@ const PUBLIC_FIELDS = {
   firstName: true,
   lastName: true,
   phone: true,
+  paymentInfo: true,
   avatarUrl: true,
   propertyId: true,
   buildingNo: true,
@@ -39,6 +40,7 @@ export async function updateProfile(
     firstName: string;
     lastName: string;
     phone: string | null;
+    paymentInfo: string | null;
     avatarUrl: string | null;
     preferences: Record<string, unknown>;
     buildingNo: string | null;
