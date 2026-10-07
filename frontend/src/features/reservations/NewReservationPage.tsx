@@ -251,6 +251,16 @@ export function NewReservationPage() {
             </fieldset>
 
             <div>
+              <Label htmlFor="plateNumber">Vehicle plate no. (optional)</Label>
+              <Input
+                id="plateNumber"
+                placeholder="e.g. ABC 1234"
+                {...register("plateNumber")}
+              />
+              <FormError message={errors.plateNumber?.message} />
+            </div>
+
+            <div>
               <Label htmlFor="notes">Notes (optional)</Label>
               <Input id="notes" {...register("notes")} />
             </div>

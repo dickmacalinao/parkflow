@@ -14,7 +14,6 @@ import { useAuth } from "../../context/AuthContext";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useClientPagination } from "../../lib/pagination";
 import { Pagination } from "../../components/ui/Pagination";
-import { useProperties } from "../properties/properties.hooks";
 import {
   useCreateSlot,
   useDeleteSlot,
@@ -66,8 +65,6 @@ const EMPTY_FORM: SlotFormValues = {
 export function MyParkingSlotsPage() {
   const { user } = useAuth();
   const propertyId = user?.propertyId ?? undefined;
-  const { data: properties } = useProperties();
-  const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading: zonesLoading } = useZones(propertyId);
   const { data: slots, isLoading: slotsLoading } = useMySlots({
     includeDeleted: true,

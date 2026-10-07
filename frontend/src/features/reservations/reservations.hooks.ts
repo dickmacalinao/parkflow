@@ -32,6 +32,7 @@ export interface CreateReservationInput {
   startAt: string;
   endAt: string;
   notes?: string;
+  plateNumber?: string;
 }
 
 export function useCreateReservation() {

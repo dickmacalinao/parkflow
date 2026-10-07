@@ -6,6 +6,7 @@ export const createReservationSchema = z
     propertyId: z.string().uuid(),
     slotId: z.string().uuid(),
     vehicleId: z.string().uuid().optional(),
+    plateNumber: z.string().trim().min(1).max(32).optional(),
     type: z.nativeEnum(ReservationType).default(ReservationType.TENANT),
     startAt: z.coerce.date(),
     endAt: z.coerce.date(),

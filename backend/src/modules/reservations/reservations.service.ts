@@ -31,6 +31,7 @@ function priceStay(slot: { hourlyRate: unknown; dailyRate: unknown }, startAt: D
 async function assertReservationAccess(
   req: Request,
   reservation: { propertyId: string; slotId: string },
+  checkApprovership: boolean = true,
 ): Promise<void> {
   if (!req.user) throw forbidden();
   if (req.user.role === Role.SUPER_ADMIN) return;
@@ -38,7 +39,7 @@ async function assertReservationAccess(
   const assignedPropertyId = await getAssignedPropertyId(req.user.id, req.user.role);
   if (reservation.propertyId !== assignedPropertyId) throw notFound('Reservation not found.');
 
-  if (req.user.role === Role.PROPERTY_OWNER) {
+  if (checkApprovership && req.user.role === Role.PROPERTY_OWNER) {
     const ownedSlot = await prisma.parkingSlot.findFirst({
       where: {
         id: reservation.slotId,
@@ -52,7 +53,7 @@ async function assertReservationAccess(
 }
 
 export async function createReservation(
-  input: { propertyId: string; slotId: string; vehicleId?: string; type: ReservationType; startAt: Date; endAt: Date; notes?: string },
+  input: { propertyId: string; slotId: string; vehicleId?: string; plateNumber: string; type: ReservationType; startAt: Date; endAt: Date; notes?: string },
   req: Request
 ) {
   await assertRequestPropertyAccess(req, input.propertyId, false);
@@ -92,6 +93,26 @@ export async function createReservation(
     if (!vehicle) throw badRequest('Vehicle not found or does not belong to you.');
   }
 
+  // Resolve the vehicle from the plate number: reuse the owner's existing vehicle for that
+  // plate, otherwise register a new one so reservations.vehicleId stays populated.
+  let vehicleId = input.vehicleId;
+  const plateNumber = input.plateNumber?.trim().toUpperCase();
+  if (!vehicleId && plateNumber) {
+    const existing = await prisma.vehicle.findFirst({
+      where: { ownerUserId: req.user!.id, plateNumber, deletedAt: null },
+      select: { id: true },
+    });
+    if (existing) {
+      vehicleId = existing.id;
+    } else {
+      const vehicle = await prisma.vehicle.create({
+        data: { ownerUserId: req.user!.id, plateNumber },
+        select: { id: true },
+      });
+      vehicleId = vehicle.id;
+    }
+  }
+
   const amount = priceStay(slot, input.startAt, input.endAt);
 
   try {
@@ -100,7 +121,7 @@ export async function createReservation(
         code: generateCode(),
         propertyId: input.propertyId,
         slotId: input.slotId,
-        vehicleId: input.vehicleId,
+        vehicleId,
         requestedById: req.user!.id,
         type: input.type,
         startAt: input.startAt,
@@ -287,7 +308,7 @@ export async function decideReservation(
 export async function cancelReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertReservationAccess(req, reservation);
+  await assertReservationAccess(req, reservation, false);
 
   const isOwner = reservation.requestedById === req.user!.id;
   const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
