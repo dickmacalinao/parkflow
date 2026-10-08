@@ -3,18 +3,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "react-router-dom";
 import { useZone, type Slot } from "../parking/parking.hooks";
-import { useReservation } from "./reservations.hooks";
+import {
+  useReservation,
+  useUpdateReservation,
+  getApiErrorMessage,
+} from "./reservations.hooks";
 import { useProfile } from "../profile/profile.hooks";
 import {
-  newReservationSchema,
-  type NewReservationInput,
+  updateReservationSchema,
+  type UpdateReservationInput,
 } from "./reservation.schemas";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 import { Alert } from "../../components/ui/Alert";
+import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Spinner } from "../../components/ui/Spinner";
+import { FormError } from "../../components/ui/FormError";
 import {
   Card,
   CardContent,
@@ -23,14 +29,14 @@ import {
 } from "../../components/ui/Card";
 import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/format";
-import { STATUS_TONE } from "../../components/Types";
+import { STATUS_TONE, PAYMENT_METHOD_TYPES } from "../../components/Types";
 
 export function ReservationDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
-  // const propertyId = user?.propertyId ?? undefined;
-  // const create = useCreateReservation();
+  const update = useUpdateReservation();
+
   const { data: reservation, isLoading } = useReservation(id);
   const { data: zone } = useZone(reservation?.slot?.zoneId);
   const { data: propertyOwner, isLoading: userProfileLoading } = useProfile(
@@ -39,12 +45,10 @@ export function ReservationDetailPage() {
 
   const {
     register,
-    control,
-    watch,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<NewReservationInput>({
-    resolver: zodResolver(newReservationSchema),
+  } = useForm<UpdateReservationInput>({
+    resolver: zodResolver(updateReservationSchema),
   });
 
   const formatDateTime = (value?: string) => {
@@ -95,24 +99,19 @@ export function ReservationDetailPage() {
     user?.id === reservation?.requestedBy?.id &&
     reservation?.status === "PENDING";
 
-  const onSubmit = async (data: NewReservationInput) => {
-    /*
+  const onSubmit = async (data: UpdateReservationInput) => {
     setServerError(null);
     try {
-      await create.mutateAsync({
+      await update.mutateAsync({
         ...data,
-        propertyId,
-        type: "TENANT",
-        startAt: new Date(data.startAt).toISOString(),
-        endAt: new Date(data.endAt).toISOString(),
+        id: reservation?.id,
+        propertyId: reservation?.property?.id,
       });
-      navigate("/my-reservations");
     } catch (err) {
       setServerError(
-        getApiErrorMessage(err, "Could not create the reservation."),
+        getApiErrorMessage(err, "Could not update the reservation."),
       );
     }
-    */
   };
 
   return (
@@ -198,30 +197,57 @@ export function ReservationDetailPage() {
 
             <div>
               <Label htmlFor="notes">Notes (optional)</Label>
-              <Input id="notes" disabled value={reservation?.notes || ""} />
+              <Input
+                id="notes"
+                disabled={!isForPayment}
+                {...register("notes")}
+              />
             </div>
 
             {!userProfileLoading && propertyOwner && (
               <div className="border-t border-gray-200 pt-5">
                 <CardTitle>Payment Information</CardTitle>
-                <div className="mt-5">
-                  <Label htmlFor="paymentMethod">Payment Method</Label>
-                  <Input
-                    id="paymentMethod"
-                    disabled={!isForPayment}
-                    placeholder="e.g. GCash, Maya or Bank Transfer"
-                  />
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Select
+                      id="paymentMethod"
+                      aria-label="Filter users by property w-full"
+                      disabled={!isForPayment}
+                      {...register("paymentMethod")}
+                      onChange={() => {
+                        // setPropertyFilter(event.target.value);
+                        // setPage(1);
+                      }}
+                    >
+                      <option value="">Select a payment method</option>
+                      {PAYMENT_METHOD_TYPES.map((paymentMethod) => (
+                        <option
+                          key={paymentMethod.value}
+                          value={paymentMethod.value}
+                        >
+                          {paymentMethod.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <FormError message={errors.paymentMethod?.message} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="paymentReference">
+                      Payment Reference No.
+                    </Label>
+                    <Input
+                      id="paymentReference"
+                      type="number"
+                      disabled={!isForPayment}
+                      placeholder="XXXXXXXXXXXX"
+                      {...register("paymentReference")}
+                    />
+                    <FormError message={errors.paymentReference?.message} />
+                  </div>
                 </div>
-                <div className="mt-5">
-                  <Label htmlFor="paymentReference">
-                    Payment Reference No.
-                  </Label>
-                  <Input
-                    id="paymentReference"
-                    disabled={!isForPayment}
-                    placeholder="XXXXXXXXXXXX"
-                  />
-                </div>
+
                 {isForPayment && (
                   <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600 mt-2">
                     <p className="text-sm font-medium">Send Payment to:</p>
@@ -237,7 +263,7 @@ export function ReservationDetailPage() {
 
             {isForPayment && (
               <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                Update reservation
+                Submit Payment Information
               </Button>
             )}
           </form>

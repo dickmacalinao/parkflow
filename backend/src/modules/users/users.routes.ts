@@ -71,6 +71,7 @@ router.get(
   })
 );
 
+//TODO: Implement validation for property scope in reservation queries
 /**
  * @openapi
  * /api/users/{id}:

@@ -122,14 +122,15 @@ export function NewReservationPage() {
   const onSubmit = async (data: NewReservationInput) => {
     setServerError(null);
     try {
-      await create.mutateAsync({
+      const reservation = await create.mutateAsync({
         ...data,
         propertyId,
         type: "TENANT",
         startAt: new Date(data.startAt).toISOString(),
         endAt: new Date(data.endAt).toISOString(),
       });
-      navigate("/my-reservations");
+
+      navigate(`/my-reservations/${reservation.id}`);
     } catch (err) {
       setServerError(
         getApiErrorMessage(err, "Could not create the reservation."),

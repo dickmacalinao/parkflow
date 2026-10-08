@@ -60,6 +60,28 @@ export function useCreateReservation() {
   });
 }
 
+export interface UpdateReservationInput {
+  id: string;
+  propertyId: string;
+  notes?: string;
+  paymentMethod: string;
+  paymentReference: string;
+}
+
+export function useUpdateReservation() {
+  //const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateReservationInput) => {
+      const { data } = await apiClient.patch(`/reservations/${input.id}`, input);
+      return data;
+    },
+    onSuccess: () => {
+      //qc.invalidateQueries({ queryKey: ['reservations'] });
+      //qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
 export function useDecideReservation() {
   const qc = useQueryClient();
   return useMutation({

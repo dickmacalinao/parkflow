@@ -11,3 +11,12 @@ export const newReservationSchema = z
   .refine((d) => new Date(d.endAt) > new Date(d.startAt), { message: 'End must be after start.', path: ['endAt'] });
 
 export type NewReservationInput = z.infer<typeof newReservationSchema>;
+
+export const updateReservationSchema = z
+  .object({
+    notes: z.string().optional(),
+    paymentMethod: z.string().trim().min(1, 'Payment method is required.'),
+    paymentReference: z.string().trim().max(32).min(1, 'Payment reference is required.'),
+  });
+
+export type UpdateReservationInput = z.infer<typeof updateReservationSchema>;

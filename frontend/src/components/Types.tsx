@@ -37,6 +37,16 @@ export const RESERVATION_STATUS_TYPES = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
+export const PAYMENT_METHOD_TYPES = [
+  { value: "GCASH", label: "GCash" },
+  {
+    value: "MAYA",
+    label: "Maya",
+  },
+  { value: "BANK_TRANSFER", label: "Bank Transfer" },
+  { value: "OTHER", label: "Other" },
+];
+
 export const STATUS_TONE: Record<
   string,
   "default" | "success" | "destructive" | "muted"
