@@ -213,7 +213,14 @@ export function ReservationsListPage({
             )}
             {reservations?.map((r) => (
               <TR key={r.id}>
-                <TD className="font-mono text-xs">{r.code}</TD>
+                <TD className="font-mono text-xs">
+                  <Link
+                    to={`/my-reservations/${r.code}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {r.code}
+                  </Link>
+                </TD>
                 <TD>
                   {r.property.name} / {r.slot.code}
                 </TD>

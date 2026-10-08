@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const newReservationSchema = z
   .object({
-    slotId: z.string().uuid('Choose a bay.'),
+    slotId: z.string().uuid('Choose a slot.'),
     startAt: z.string().min(1, 'Start date/time is required.'),
     endAt: z.string().min(1, 'End date/time is required.'),
     plateNumber: z.string().trim().max(32).min(1, 'Plate number is required.'),

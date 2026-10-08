@@ -16,6 +16,7 @@ import { ZonesPage } from "../features/parking/ZonesPage";
 import { ReservationsPage } from "../features/reservations/ReservationsPage";
 import { MyReservationsPage } from "../features/reservations/MyReservationsPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
+import { ReservationDetailPage } from "../features/reservations/ReservationDetailPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
 import { UserProfilePage } from "@/features/profile/UserProfilePage";
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
             element: <MyReservationsPage />,
           },
           { path: "/my-reservations/new", element: <NewReservationPage /> },
+          { path: "/my-reservations/:id", element: <ReservationDetailPage /> },
           { path: "/availability", element: <SlotsAvailabilityPage /> },
           {
             element: <RoleGuard roles={ZONE_ROLES} />,

@@ -19,10 +19,10 @@ import { type StoredUser } from "../../lib/authStorage";
 
 export function ProfilePage({
   userProfile,
-  isLoading,
+  isLoading = false,
 }: {
   userProfile?: StoredUser;
-  isLoading: boolean;
+  isLoading?: boolean;
 }) {
   const { user, setUser } = useAuth();
   const { data: properties } = useProperties();
@@ -41,6 +41,8 @@ export function ProfilePage({
     reset,
     formState: { isSubmitting },
   } = useForm<ProfileFields>();
+
+  const isDisabled = !!userProfile;
 
   useEffect(() => {
     if (!isLoading) {
@@ -109,6 +111,7 @@ export function ProfilePage({
                   id="firstName"
                   autoComplete="given-name"
                   required
+                  disabled={isDisabled}
                   {...register("firstName", { required: true })}
                 />
               </div>
@@ -118,6 +121,7 @@ export function ProfilePage({
                   id="lastName"
                   autoComplete="family-name"
                   required
+                  disabled={isDisabled}
                   {...register("lastName", { required: true })}
                 />
               </div>
@@ -127,6 +131,7 @@ export function ProfilePage({
               <Input
                 id="phone"
                 type="tel"
+                disabled={isDisabled}
                 autoComplete="tel"
                 {...register("phone")}
               />
@@ -137,6 +142,7 @@ export function ProfilePage({
                 <TextInput
                   id="paymentInfo"
                   required
+                  disabled={isDisabled}
                   {...register("paymentInfo")}
                 />
                 <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
@@ -157,6 +163,7 @@ export function ProfilePage({
                     <Input
                       id="buildingNo"
                       required
+                      disabled={isDisabled}
                       {...register("buildingNo", { required: true })}
                     />
                   </div>
@@ -165,6 +172,7 @@ export function ProfilePage({
                     <Input
                       id="floorNo"
                       required
+                      disabled={isDisabled}
                       {...register("floorNo", { required: true })}
                     />
                   </div>
@@ -173,6 +181,7 @@ export function ProfilePage({
                     <Input
                       id="unitNo"
                       required
+                      disabled={isDisabled}
                       {...register("unitNo", { required: true })}
                     />
                   </div>
@@ -181,9 +190,14 @@ export function ProfilePage({
             )}
             <div>
               <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input id="avatarUrl" type="url" {...register("avatarUrl")} />
+              <Input
+                id="avatarUrl"
+                type="url"
+                disabled={isDisabled}
+                {...register("avatarUrl")}
+              />
             </div>
-            {!userProfile && (
+            {!isDisabled && (
               <div className="flex justify-end">
                 <Button type="submit" isLoading={isSubmitting}>
                   Save Profile

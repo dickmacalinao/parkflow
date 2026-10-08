@@ -37,7 +37,7 @@ function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   return Math.round(amount * 100) / 100;
 }
 
-export function NewReservationPage() {
+export function ReservationDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -139,7 +139,7 @@ export function NewReservationPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
-      <h1 className="text-2xl font-semibold">Reserve a slot</h1>
+      <h1 className="text-2xl font-semibold">Proceed to payment</h1>
       <Card>
         <CardHeader>
           <CardTitle>Reservation details</CardTitle>
