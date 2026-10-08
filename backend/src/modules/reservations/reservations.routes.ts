@@ -77,6 +77,17 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/reservations/{id}:
+ *   get:
+ *     summary: Get reservation detail
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Reservation detail }
+ *       404: { description: Not found }
+ */
 router.get(
   '/:id',
   requireAuth,

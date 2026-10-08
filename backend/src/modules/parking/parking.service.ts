@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
+import { AuditAction, ReservationStatus, Role, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { forbidden, notFound } from '../../utils/errors.js';
@@ -46,6 +46,13 @@ export async function listZones(propertyId: string, req: Request) {
     orderBy: { sortOrder: 'asc' },
     include: { _count: { select: { slots: true } } },
   });
+}
+
+export async function getZone(id: string, req: Request) {
+  await assertZoneAccess(req, id);
+  const zone = await prisma.parkingZone.findFirst({ where: { id } });
+  if (!zone) throw notFound('Parking zone not found.');
+  return zone;
 }
 
 export async function updateZone(id: string, data: Record<string, unknown>, req: Request) {

@@ -139,9 +139,6 @@ export function ZonesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Zones</h1>
-          {property && (
-            <p className="text-sm text-muted-foreground">{property.name}</p>
-          )}
         </div>
         <Button onClick={openCreate}>Add Zone</Button>
       </div>

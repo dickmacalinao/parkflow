@@ -88,125 +88,131 @@ export function ProfilePage({
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {userProfile ? "User Profile" : "My Profile"}
-        </h1>
-        <p className="text-sm text-muted-foreground">{user?.email}</p>
-      </div>
+    <>
+      {!isLoading && (
+        <div className="mx-auto max-w-2xl space-y-5">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              {userProfile ? "User Profile" : "My Profile"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {userProfile?.email ?? user?.email}
+            </p>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && <Alert tone="destructive">{error}</Alert>}
-            {success && <Alert tone="success">Profile updated.</Alert>}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  autoComplete="given-name"
-                  required
-                  disabled={isDisabled}
-                  {...register("firstName", { required: true })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  autoComplete="family-name"
-                  required
-                  disabled={isDisabled}
-                  {...register("lastName", { required: true })}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                disabled={isDisabled}
-                autoComplete="tel"
-                {...register("phone")}
-              />
-            </div>
-            {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
-              <div>
-                <Label htmlFor="paymentInfo">Payment Information</Label>
-                <TextInput
-                  id="paymentInfo"
-                  required
-                  disabled={isDisabled}
-                  {...register("paymentInfo")}
-                />
-                <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-                  <p className="text-sm font-medium">
-                    Sample Payment Information
-                  </p>
-                  <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
-                  <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
-                </div>
-              </div>
-            )}
-            {showCondoAddress && (
-              <div className="space-y-3 border-t border-border pt-4">
-                <h3 className="font-medium">Property address</h3>
-                <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {error && <Alert tone="destructive">{error}</Alert>}
+                {success && <Alert tone="success">Profile updated.</Alert>}
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="buildingNo">Building No.</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input
-                      id="buildingNo"
+                      id="firstName"
+                      autoComplete="given-name"
                       required
                       disabled={isDisabled}
-                      {...register("buildingNo", { required: true })}
+                      {...register("firstName", { required: true })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="floorNo">Floor No.</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input
-                      id="floorNo"
+                      id="lastName"
+                      autoComplete="family-name"
                       required
                       disabled={isDisabled}
-                      {...register("floorNo", { required: true })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unitNo">Unit No.</Label>
-                    <Input
-                      id="unitNo"
-                      required
-                      disabled={isDisabled}
-                      {...register("unitNo", { required: true })}
+                      {...register("lastName", { required: true })}
                     />
                   </div>
                 </div>
-              </div>
-            )}
-            <div>
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input
-                id="avatarUrl"
-                type="url"
-                disabled={isDisabled}
-                {...register("avatarUrl")}
-              />
-            </div>
-            {!isDisabled && (
-              <div className="flex justify-end">
-                <Button type="submit" isLoading={isSubmitting}>
-                  Save Profile
-                </Button>
-              </div>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    disabled={isDisabled}
+                    autoComplete="tel"
+                    {...register("phone")}
+                  />
+                </div>
+                {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
+                  <div>
+                    <Label htmlFor="paymentInfo">Payment Information</Label>
+                    <TextInput
+                      id="paymentInfo"
+                      required
+                      disabled={isDisabled}
+                      {...register("paymentInfo")}
+                    />
+                    <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                      <p className="text-sm font-medium">
+                        Sample Payment Information
+                      </p>
+                      <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
+                      <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
+                    </div>
+                  </div>
+                )}
+                {showCondoAddress && (
+                  <div className="space-y-3 border-t border-border pt-4">
+                    <h3 className="font-medium">Property address</h3>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <Label htmlFor="buildingNo">Building No.</Label>
+                        <Input
+                          id="buildingNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("buildingNo", { required: true })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="floorNo">Floor No.</Label>
+                        <Input
+                          id="floorNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("floorNo", { required: true })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unitNo">Unit No.</Label>
+                        <Input
+                          id="unitNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("unitNo", { required: true })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="avatarUrl">Avatar URL</Label>
+                  <Input
+                    id="avatarUrl"
+                    type="url"
+                    disabled={isDisabled}
+                    {...register("avatarUrl")}
+                  />
+                </div>
+                {!isDisabled && (
+                  <div className="flex justify-end">
+                    <Button type="submit" isLoading={isSubmitting}>
+                      Save Profile
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }

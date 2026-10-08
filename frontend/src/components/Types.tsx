@@ -36,3 +36,18 @@ export const RESERVATION_STATUS_TYPES = [
   //{ value: "CHECKED_IN", label: "Checked In" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
+
+export const STATUS_TONE: Record<
+  string,
+  "default" | "success" | "destructive" | "muted"
+> = {
+  PENDING: "default",
+  APPROVED: "success",
+  REJECTED: "destructive",
+  CANCELLED: "muted",
+  CHECKED_IN: "success",
+  CHECKED_OUT: "muted",
+  COMPLETED: "muted",
+  EXPIRED: "muted",
+  NO_SHOW: "destructive",
+};

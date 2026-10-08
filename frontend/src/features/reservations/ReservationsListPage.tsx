@@ -19,21 +19,7 @@ import { RESERVATION_STATUS_TYPES } from "../../components/Types";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { Pagination } from "../../components/ui/Pagination";
 import { formatPrice } from "../../utils/format";
-
-const STATUS_TONE: Record<
-  string,
-  "default" | "success" | "destructive" | "muted"
-> = {
-  PENDING: "default",
-  APPROVED: "success",
-  REJECTED: "destructive",
-  CANCELLED: "muted",
-  CHECKED_IN: "success",
-  CHECKED_OUT: "muted",
-  COMPLETED: "muted",
-  EXPIRED: "muted",
-  NO_SHOW: "destructive",
-};
+import { STATUS_TONE } from "../../components/Types";
 
 export interface ReservationsListPageProps {
   mine?: boolean;
@@ -215,7 +201,7 @@ export function ReservationsListPage({
               <TR key={r.id}>
                 <TD className="font-mono text-xs">
                   <Link
-                    to={`/my-reservations/${r.code}`}
+                    to={`/my-reservations/${r.id}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {r.code}
