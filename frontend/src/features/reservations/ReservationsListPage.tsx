@@ -180,7 +180,8 @@ export function ReservationsListPage({
               <TH>Code</TH>
               <TH>Property / Bay</TH>
               {isStaff && !mine && <TH>Requested by</TH>}
-              <TH>Dates</TH>
+              <TH>Reservation Dates</TH>
+              <TH>Requested Date</TH>
               <TH className="text-right">Amount</TH>
               <TH className="text-center">Status</TH>
               <TH className="text-right">Actions</TH>
@@ -222,6 +223,9 @@ export function ReservationsListPage({
                 <TD className="text-xs">
                   {new Date(r.startAt).toLocaleString()} -&gt;{" "}
                   {new Date(r.endAt).toLocaleString()}
+                </TD>
+                <TD className="text-xs">
+                  {new Date(r.createdAt).toLocaleString()}
                 </TD>
                 <TD className="text-right">{formatPrice(r.amount)}</TD>
                 <TD className="text-center">

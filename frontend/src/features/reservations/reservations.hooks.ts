@@ -6,6 +6,7 @@ export interface Reservation {
   id: string;
   code: string;
   status: string;
+  createdAt: string;
   startAt: string;
   endAt: string;
   amount: string;
