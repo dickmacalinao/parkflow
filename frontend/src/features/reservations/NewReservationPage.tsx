@@ -24,7 +24,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { useAuth } from "../../context/AuthContext";
-import { formatPrice } from "../../utils/format";
+import { formatPrice, formatDateTime } from "../../utils/format";
 
 function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   const durationHours = (endAt.getTime() - startAt.getTime()) / 3_600_000;
@@ -54,16 +54,6 @@ export function NewReservationPage() {
     resolver: zodResolver(newReservationSchema),
   });
   const [startAt, endAt] = watch(["startAt", "endAt"]);
-
-  const formatDateTime = (value?: string) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
-    return date.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  };
 
   const selectedDateRange =
     startAt && endAt

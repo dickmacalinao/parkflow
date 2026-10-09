@@ -13,6 +13,7 @@ import * as reservationsService from './reservations.service.js';
 const router = Router();
 const idParam = z.object({ id: z.string().uuid() });
 const STAFF_ROLES = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'] as const;
+const REQUESTOR_ROLES = ['PROPERTY_OWNER', 'TENANT'] as const;
 
 /**
  * @openapi
@@ -105,6 +106,26 @@ router.get(
 
 /**
  * @openapi
+ * /api/reservations/{id}/pay:
+ *   patch:
+ *     summary: Pay for a reservation (owner or tenant)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Reservation paid }
+ */
+router.patch(
+  '/:id/pay',
+  requireAuth,
+  validate({ params: idParam }),
+  requireRole(...REQUESTOR_ROLES),
+  asyncHandler(async (req, res) => {
+    res.json(await reservationsService.payReservation(req.params.id, req));
+  })
+);
+
+/**
+ * @openapi
  * /api/reservations/{id}/decision:
  *   post:
  *     summary: Approve or reject a pending reservation (Property Manager/Owner/Admin)
@@ -143,7 +164,7 @@ router.post(
 );
 
 /**
- * @openapi
+ * FOR FUTURE // @openapi
  * /api/reservations/check-in:
  *   post:
  *     summary: Check a vehicle in by scanning its confirmation code or QR token (Attendant)
@@ -152,6 +173,7 @@ router.post(
  *     responses:
  *       200: { description: Reservation moved to CHECKED_IN, slot marked OCCUPIED }
  */
+/*
 router.post(
   '/check-in',
   requireAuth,
@@ -161,9 +183,11 @@ router.post(
     res.json(await reservationsService.checkIn(req.body.code, req));
   })
 );
+*/
+
 
 /**
- * @openapi
+ * FOR FUTURE // @openapi
  * /api/reservations/{id}/check-out:
  *   post:
  *     summary: Check a vehicle out (Attendant)
@@ -172,6 +196,7 @@ router.post(
  *     responses:
  *       200: { description: Reservation moved to CHECKED_OUT, slot freed }
  */
+/*
 router.post(
   '/:id/check-out',
   requireAuth,
@@ -181,5 +206,6 @@ router.post(
     res.json(await reservationsService.checkOut(req.params.id, req));
   })
 );
+*/
 
 export default router;

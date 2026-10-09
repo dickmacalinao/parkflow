@@ -305,6 +305,34 @@ export async function decideReservation(
   return updated;
 }
 
+export async function payReservation(id: string, req: Request) {
+  
+  const reservation = await prisma.reservation.findUnique({ where: { id } });
+  if (!reservation) throw notFound('Reservation not found.');
+  await assertReservationAccess(req, reservation, false);
+
+  const isOwner = reservation.requestedById === req.user!.id;
+  const isRequestor = ['PROPERTY_OWNER', 'TENANT'].includes(req.user!.role);
+  if (!isOwner && !isRequestor) throw forbidden();
+
+  if (
+    reservation.status === ReservationStatus.CANCELLED ||
+    reservation.status === ReservationStatus.COMPLETED ||
+    reservation.status === ReservationStatus.APPROVED
+  ) {
+    throw conflict(`Reservation already ${reservation.status.toLowerCase()}.`);
+  }
+
+  const updated = await prisma.reservation.update({ where: { id }, data: { notes: req.body.notes } });  
+  await prisma.payment.create({
+        data: { reservationId: id, amount: req.body.amount, method: req.body.method, providerRef: req.body.providerRef, status: 'PENDING' },
+        select: { id: true },
+      });
+  await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'Reservation', entityId: id, description: 'Payment' });
+
+  return updated;
+}
+
 export async function cancelReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
@@ -330,6 +358,7 @@ export async function cancelReservation(id: string, req: Request) {
 }
 
 /** Parking Attendant scans the QR code / confirmation code at the gate to check a vehicle in. */
+/*
 export async function checkIn(codeOrQr: string, req: Request) {
   const reservation = await prisma.reservation.findFirst({
     where: { OR: [{ code: codeOrQr }, { qrCodeToken: codeOrQr }] },
@@ -367,3 +396,4 @@ export async function checkOut(id: string, req: Request) {
 
   return updated;
 }
+*/

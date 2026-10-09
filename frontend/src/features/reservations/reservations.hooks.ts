@@ -60,19 +60,20 @@ export function useCreateReservation() {
   });
 }
 
-export interface UpdateReservationInput {
+export interface PayReservationInput {
   id: string;
   propertyId: string;
   notes?: string;
-  paymentMethod: string;
-  paymentReference: string;
+  amount: number;
+  method: string;
+  providerRef: string;
 }
 
-export function useUpdateReservation() {
+export function usePayReservation() {
   //const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: UpdateReservationInput) => {
-      const { data } = await apiClient.patch(`/reservations/${input.id}`, input);
+    mutationFn: async (input: PayReservationInput) => {
+      const { data } = await apiClient.patch(`/reservations/${input.id}/pay`, input);
       return data;
     },
     onSuccess: () => {

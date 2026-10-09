@@ -12,11 +12,11 @@ export const newReservationSchema = z
 
 export type NewReservationInput = z.infer<typeof newReservationSchema>;
 
-export const updateReservationSchema = z
+export const payReservationSchema = z
   .object({
     notes: z.string().optional(),
-    paymentMethod: z.string().trim().min(1, 'Payment method is required.'),
-    paymentReference: z.string().trim().max(32).min(1, 'Payment reference is required.'),
+    method: z.string().trim().min(1, 'Payment method is required.'),
+    providerRef: z.string().trim().max(32).min(1, 'Payment reference is required.'),
   });
 
-export type UpdateReservationInput = z.infer<typeof updateReservationSchema>;
+export type PayReservationInput = z.infer<typeof payReservationSchema>;

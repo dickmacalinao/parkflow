@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "react-router-dom";
-import { useZone, type Slot } from "../parking/parking.hooks";
+import { useZone } from "../parking/parking.hooks";
 import {
   useReservation,
-  useUpdateReservation,
+  usePayReservation,
   getApiErrorMessage,
 } from "./reservations.hooks";
 import { useProfile } from "../profile/profile.hooks";
 import {
-  updateReservationSchema,
-  type UpdateReservationInput,
+  payReservationSchema,
+  type PayReservationInput,
 } from "./reservation.schemas";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -28,14 +28,15 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { useAuth } from "../../context/AuthContext";
-import { formatPrice } from "../../utils/format";
+import { formatPrice, formatDateTime } from "../../utils/format";
 import { STATUS_TONE, PAYMENT_METHOD_TYPES } from "../../components/Types";
 
 export function ReservationDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
-  const update = useUpdateReservation();
+  const [success, setSuccess] = useState(false);
+  const update = usePayReservation();
 
   const { data: reservation, isLoading } = useReservation(id);
   const { data: zone } = useZone(reservation?.slot?.zoneId);
@@ -46,20 +47,11 @@ export function ReservationDetailPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
-  } = useForm<UpdateReservationInput>({
-    resolver: zodResolver(updateReservationSchema),
+  } = useForm<PayReservationInput>({
+    resolver: zodResolver(payReservationSchema),
   });
-
-  const formatDateTime = (value?: string) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
-    return date.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  };
 
   const selectedDateRange =
     reservation?.startAt && reservation?.endAt
@@ -70,46 +62,38 @@ export function ReservationDetailPage() {
           ? `Select start date and time – ${formatDateTime(reservation?.endAt)}`
           : "Select start and end dates";
 
+  useEffect(() => {
+    if (!isLoading) {
+      reset({
+        notes: reservation?.notes,
+        method: reservation?.payment?.method,
+        providerRef: reservation?.payment?.providerRef,
+      });
+    }
+  }, [reservation, reset, isLoading]);
+
   if (isLoading) return <Spinner />;
   if (!reservation) return <p>Reservation not found.</p>;
 
-  function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
-    const durationHours =
-      (new Date(endAt)?.getTime() - new Date(startAt)?.getTime()) / 3_600_000;
-    const dailyRate = Number(slot.dailyRate);
-    const hourlyRate = slot.hourlyRate
-      ? Number(slot.hourlyRate)
-      : dailyRate / 24;
-    const fullDays = Math.floor(durationHours / 24);
-    const remainderHours = durationHours - fullDays * 24;
-    const amount =
-      fullDays * dailyRate + Math.min(remainderHours * hourlyRate, dailyRate);
-    return Math.round(amount * 100) / 100;
-  }
-
-  const totalPrice = reservation
-    ? calculateStayPrice(
-        reservation?.slot,
-        reservation?.startAt,
-        reservation?.endAt,
-      )
-    : 0;
-
   const isForPayment =
     user?.id === reservation?.requestedBy?.id &&
-    reservation?.status === "PENDING";
+    reservation?.status === "PENDING" &&
+    !reservation?.payment;
 
-  const onSubmit = async (data: UpdateReservationInput) => {
+  const onSubmit = async (data: PayReservationInput) => {
     setServerError(null);
+    setSuccess(false);
     try {
       await update.mutateAsync({
         ...data,
         id: reservation?.id,
         propertyId: reservation?.property?.id,
+        amount: reservation?.amount,
       });
+      setSuccess(true);
     } catch (err) {
       setServerError(
-        getApiErrorMessage(err, "Could not update the reservation."),
+        getApiErrorMessage(err, "Could not process payment reservation."),
       );
     }
   };
@@ -120,9 +104,10 @@ export function ReservationDetailPage() {
         Reservation Code: {reservation?.code}
       </h1>
       {isForPayment && (
-        <Alert tone="destructive">
+        <Alert tone="info">
           Your request goes to the property owner for approval. Please reach out
-          the property owner before payment to confirm booking.
+          the property owner before payment to inform reservation and to have a
+          fast approval.
         </Alert>
       )}
       <Card>
@@ -141,6 +126,9 @@ export function ReservationDetailPage() {
             className="space-y-4"
           >
             {serverError && <Alert tone="destructive">{serverError}</Alert>}
+            {success && (
+              <Alert tone="success">Reservation payment successful.</Alert>
+            )}
 
             <div>
               <Label htmlFor="requestedBy">Requested By</Label>
@@ -189,7 +177,7 @@ export function ReservationDetailPage() {
                     </span>
                   </span>
                   <span className="shrink-0 text-sm font-semibold">
-                    Total {formatPrice(totalPrice)}
+                    Total {formatPrice(reservation?.amount ?? 0)}
                   </span>
                 </label>
               </div>
@@ -214,11 +202,7 @@ export function ReservationDetailPage() {
                       id="paymentMethod"
                       aria-label="Filter users by property w-full"
                       disabled={!isForPayment}
-                      {...register("paymentMethod")}
-                      onChange={() => {
-                        // setPropertyFilter(event.target.value);
-                        // setPage(1);
-                      }}
+                      {...register("method")}
                     >
                       <option value="">Select a payment method</option>
                       {PAYMENT_METHOD_TYPES.map((paymentMethod) => (
@@ -230,21 +214,19 @@ export function ReservationDetailPage() {
                         </option>
                       ))}
                     </Select>
-                    <FormError message={errors.paymentMethod?.message} />
+                    <FormError message={errors.method?.message} />
                   </div>
 
                   <div>
-                    <Label htmlFor="paymentReference">
-                      Payment Reference No.
-                    </Label>
+                    <Label htmlFor="providerRef">Payment Reference No.</Label>
                     <Input
-                      id="paymentReference"
+                      id="providerRef"
                       type="number"
                       disabled={!isForPayment}
                       placeholder="XXXXXXXXXXXX"
-                      {...register("paymentReference")}
+                      {...register("providerRef")}
                     />
-                    <FormError message={errors.paymentReference?.message} />
+                    <FormError message={errors.providerRef?.message} />
                   </div>
                 </div>
 

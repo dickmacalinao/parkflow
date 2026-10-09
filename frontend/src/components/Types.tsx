@@ -38,12 +38,15 @@ export const RESERVATION_STATUS_TYPES = [
 ];
 
 export const PAYMENT_METHOD_TYPES = [
-  { value: "GCASH", label: "GCash" },
+  { value: "CARD", label: "Card" },
   {
-    value: "MAYA",
-    label: "Maya",
+    value: "CASH",
+    label: "Cash",
   },
+  { value: "WALLET", label: "GCash/PayMaya/etc." },
   { value: "BANK_TRANSFER", label: "Bank Transfer" },
+
+  { value: "COMPLIMENTARY", label: "Complimentary" },
   { value: "OTHER", label: "Other" },
 ];
 

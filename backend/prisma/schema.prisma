@@ -107,6 +107,7 @@ enum PaymentMethod {
   WALLET
   BANK_TRANSFER
   COMPLIMENTARY
+  OTHER
 }
 
 enum ViolationType {
