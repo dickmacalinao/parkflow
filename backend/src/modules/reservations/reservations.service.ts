@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, Role, SlotApprovalStatus, type ReservationType } from '@prisma/client';
+import { AuditAction, PaymentStatus, ReservationStatus, Role, SlotApprovalStatus, type ReservationType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, conflict, forbidden, notFound } from '../../utils/errors.js';
@@ -268,7 +268,7 @@ export async function decideReservation(
 ) {
   const reservation = await prisma.reservation.findUnique({
     where: { id },
-    include: { requestedBy: true, property: true, slot: true },
+    include: { requestedBy: true, property: true, slot: true, payment: true },
   });
   if (!reservation) throw notFound('Reservation not found.');
   await assertReservationAccess(req, reservation);
@@ -281,6 +281,13 @@ export async function decideReservation(
     data: { status, decidedById: req.user!.id, decidedAt: new Date(), decisionReason: reason },
   });
 
+  if (status === ReservationStatus.APPROVED) {
+    await prisma.payment.update({
+      where: { id: reservation.payment?.id },
+      data: { status: PaymentStatus.PAID },
+    });
+  }
+  
   if (status === ReservationStatus.REJECTED) {
     await prisma.parkingSlot.update({ where: { id: reservation.slotId }, data: { status: 'AVAILABLE' } });
   }
@@ -323,12 +330,26 @@ export async function payReservation(id: string, req: Request) {
     throw conflict(`Reservation already ${reservation.status.toLowerCase()}.`);
   }
 
-  const updated = await prisma.reservation.update({ where: { id }, data: { notes: req.body.notes } });  
   await prisma.payment.create({
-        data: { reservationId: id, amount: req.body.amount, method: req.body.method, providerRef: req.body.providerRef, status: 'PENDING' },
-        select: { id: true },
-      });
+    data: { 
+      reservationId: id, 
+      amount: req.body.amount, 
+      method: req.body.method, 
+      status: PaymentStatus.PENDING,
+      providerRef: req.body.providerRef, 
+      paidAt: new Date(),
+    },
+    select: { id: true },
+  });
+
+  await prisma.reservation.update({ where: { id }, data: { notes: req.body.notes } });
+
   await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'Reservation', entityId: id, description: 'Payment' });
+
+  const updated = await prisma.reservation.findUnique({
+    where: { id },
+    include: { requestedBy: true, property: true, slot: true, payment: true },
+  });
 
   return updated;
 }

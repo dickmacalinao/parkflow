@@ -6,6 +6,7 @@ import { useZone } from "../parking/parking.hooks";
 import {
   useReservation,
   usePayReservation,
+  useDecideReservation,
   getApiErrorMessage,
 } from "./reservations.hooks";
 import { useProfile } from "../profile/profile.hooks";
@@ -35,8 +36,14 @@ export function ReservationDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const update = usePayReservation();
+  const [updatedReservation, setUpdatedReservation] = useState<
+    typeof reservation | null
+  >(null);
+  const [paid, setPaid] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const payReservation = usePayReservation();
+  const decide = useDecideReservation();
 
   const { data: reservation, isLoading } = useReservation(id);
   const { data: zone } = useZone(reservation?.slot?.zoneId);
@@ -75,25 +82,64 @@ export function ReservationDetailPage() {
   if (isLoading) return <Spinner />;
   if (!reservation) return <p>Reservation not found.</p>;
 
-  const isForPayment =
-    user?.id === reservation?.requestedBy?.id &&
-    reservation?.status === "PENDING" &&
-    !reservation?.payment;
+  const isForDecision =
+    user?.id ===
+      (updatedReservation?.slot?.ownerUserId ??
+        reservation?.slot?.ownerUserId) &&
+    (updatedReservation?.status ?? reservation?.status) === "PENDING";
 
-  const onSubmit = async (data: PayReservationInput) => {
+  const isForPayment =
+    user?.id ===
+      (updatedReservation?.requestedBy?.id ?? reservation?.requestedBy?.id) &&
+    (updatedReservation?.status ?? reservation?.status) === "PENDING" &&
+    !(updatedReservation?.payment ?? reservation?.payment);
+
+  const onPay = async (data: PayReservationInput) => {
     setServerError(null);
-    setSuccess(false);
+    setPaid(false);
     try {
-      await update.mutateAsync({
-        ...data,
-        id: reservation?.id,
-        propertyId: reservation?.property?.id,
-        amount: reservation?.amount,
-      });
-      setSuccess(true);
+      setUpdatedReservation(
+        await payReservation.mutateAsync({
+          ...data,
+          id: reservation?.id,
+          propertyId: reservation?.property?.id,
+          amount: reservation?.amount,
+        }),
+      );
+      setPaid(true);
     } catch (err) {
       setServerError(
         getApiErrorMessage(err, "Could not process payment reservation."),
+      );
+    }
+  };
+
+  const onApprove = async () => {
+    setServerError(null);
+    setApproved(false);
+    try {
+      setUpdatedReservation(
+        await decide.mutateAsync({ id: reservation.id, status: "APPROVED" }),
+      );
+      setApproved(true);
+    } catch (err) {
+      setServerError(
+        getApiErrorMessage(err, "Could not process reservation approval."),
+      );
+    }
+  };
+
+  const onReject = async () => {
+    setServerError(null);
+    setRejected(false);
+    try {
+      setUpdatedReservation(
+        await decide.mutateAsync({ id: reservation.id, status: "REJECTED" }),
+      );
+      setRejected(true);
+    } catch (err) {
+      setServerError(
+        getApiErrorMessage(err, "Could not process reservation rejection."),
       );
     }
   };
@@ -120,15 +166,13 @@ export function ReservationDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            noValidate
-            className="space-y-4"
-          >
+          <form onSubmit={handleSubmit(onPay)} noValidate className="space-y-4">
             {serverError && <Alert tone="destructive">{serverError}</Alert>}
-            {success && (
+            {paid && (
               <Alert tone="success">Reservation payment successful.</Alert>
             )}
+            {approved && <Alert tone="success">Reservation approved.</Alert>}
+            {rejected && <Alert tone="success">Reservation rejected.</Alert>}
 
             <div>
               <Label htmlFor="requestedBy">Requested By</Label>
@@ -247,6 +291,17 @@ export function ReservationDetailPage() {
               <Button type="submit" className="w-full" isLoading={isSubmitting}>
                 Submit Payment Information
               </Button>
+            )}
+
+            {isForDecision && (
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <Button type="button" className="w-full" onClick={onApprove}>
+                  Approve
+                </Button>
+                <Button type="button" className="w-full" onClick={onReject}>
+                  Reject
+                </Button>
+              </div>
             )}
           </form>
         </CardContent>
