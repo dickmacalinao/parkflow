@@ -56,6 +56,7 @@ export const router = createBrowserRouter([
             path: "/my-reservations",
             element: <MyReservationsPage />,
           },
+          { path: "/reservations/:id", element: <ReservationDetailPage /> },
           { path: "/my-reservations/new", element: <NewReservationPage /> },
           { path: "/my-reservations/:id", element: <ReservationDetailPage /> },
           { path: "/availability", element: <SlotsAvailabilityPage /> },

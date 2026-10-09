@@ -201,7 +201,11 @@ export function ReservationsListPage({
               <TR key={r.id}>
                 <TD className="font-mono text-xs">
                   <Link
-                    to={`/my-reservations/${r.id}`}
+                    to={
+                      mine
+                        ? `/my-reservations/${r.id}`
+                        : `/reservations/${r.id}`
+                    }
                     className="font-medium text-primary hover:underline"
                   >
                     {r.code}
