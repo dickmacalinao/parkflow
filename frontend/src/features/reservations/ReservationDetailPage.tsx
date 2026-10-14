@@ -22,6 +22,7 @@ import { Select } from "../../components/ui/Select";
 import { Badge } from "../../components/ui/Badge";
 import { Spinner } from "../../components/ui/Spinner";
 import { FormError } from "../../components/ui/FormError";
+import MessagingLauncher from "./MessagingLauncher";
 import {
   Card,
   CardContent,
@@ -156,6 +157,14 @@ export function ReservationDetailPage() {
           fast approval.
         </Alert>
       )}
+
+      {isForPayment && (
+        <MessagingLauncher
+          messengerUsername={"dmacalinao"}
+          viberNumber={propertyOwner?.phone}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">

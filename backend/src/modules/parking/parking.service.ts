@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, Role, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
+import { AuditAction, ReservationStatus, SlotApprovalStatus, SlotStatus, type SlotType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { forbidden, notFound } from '../../utils/errors.js';

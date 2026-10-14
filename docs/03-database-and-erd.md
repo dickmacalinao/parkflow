@@ -169,7 +169,7 @@ alone cannot guarantee that under concurrency.
 
 ```bash
 npx prisma migrate dev --name init        # creates tables from schema.prisma
-psql "$DATABASE_URL" -f prisma/sql/add-reservation-overlap-constraint.sql
+npx prisma db execute --file prisma/sql/add-reservation-overlap-constraint.sql
 npm run seed                              # demo users (one per role) + one property + 12 bays
 ```
 

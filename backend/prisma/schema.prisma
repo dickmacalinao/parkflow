@@ -166,6 +166,7 @@ model User {
   firstName        String
   lastName         String
   phone            String?
+  fbUrl            String?
   avatarUrl        String?
   paymentInfo      String?
   role             Role

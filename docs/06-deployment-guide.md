@@ -21,8 +21,7 @@ cd backend
 cp .env.example .env               # edit DATABASE_URL if not using the compose postgres
 npm install
 npx prisma migrate dev --name init
-psql "$DATABASE_URL" -f prisma/sql/add-reservation-overlap-constraint.sql           # or run below
-psql -U postgres -d parkflow -f prisma/sql/add-reservation-overlap-constraint.sql  # if you encounter error running where database_url is not being read from .env file
+npx prisma db execute --file prisma/sql/add-reservation-overlap-constraint.sql
 npm run seed
 npm run dev                        # http://localhost:4000, docs at /api/docs
 
