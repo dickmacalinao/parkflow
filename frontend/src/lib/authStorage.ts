@@ -11,6 +11,7 @@ export interface StoredUser {
   unitNo?: string | null;
   role: string;
   status: string;
+  fbUrl?: string | null;
   avatarUrl?: string | null;
 }
 

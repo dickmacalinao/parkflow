@@ -6,10 +6,11 @@ export interface ProfileFields {
   lastName: string;
   phone: string;
   paymentInfo: string;
-  avatarUrl: string;
   buildingNo: string;
   floorNo: string;
   unitNo: string;
+  fbUrl: string;
+  avatarUrl: string;
 }
 
 export function useProfile(id?: string) {

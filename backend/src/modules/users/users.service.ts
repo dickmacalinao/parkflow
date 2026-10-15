@@ -16,6 +16,7 @@ const PUBLIC_FIELDS = {
   lastName: true,
   phone: true,
   paymentInfo: true,
+  fbUrl: true,
   avatarUrl: true,
   propertyId: true,
   buildingNo: true,
@@ -41,11 +42,12 @@ export async function updateProfile(
     lastName: string;
     phone: string | null;
     paymentInfo: string | null;
-    avatarUrl: string | null;
     preferences: Record<string, unknown>;
     buildingNo: string | null;
     floorNo: string | null;
     unitNo: string | null;
+    fbUrl: string | null;
+    avatarUrl: string | null;
   }>,
   req: Request
 ) {
@@ -79,6 +81,8 @@ export async function updateProfile(
   ) {
     throw badRequest('Building, floor, and unit details are only accepted for condominium tenants and owners.');
   }
+
+  console.log(data)
 
   const user = await prisma.user.update({
     where: { id: userId },

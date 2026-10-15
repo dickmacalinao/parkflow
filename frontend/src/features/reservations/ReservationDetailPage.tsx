@@ -158,12 +158,7 @@ export function ReservationDetailPage() {
         </Alert>
       )}
 
-      {isForPayment && (
-        <MessagingLauncher
-          messengerUsername={"dmacalinao"}
-          viberNumber={propertyOwner?.phone}
-        />
-      )}
+      {isForPayment && <MessagingLauncher fbUrl={propertyOwner?.fbUrl} />}
 
       <Card>
         <CardHeader>

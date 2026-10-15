@@ -1,14 +1,14 @@
 interface MessagingLauncherProps {
   //whatsAppNumber?: string;
-  messengerUsername?: string;
-  viberNumber?: string;
+  fbUrl?: string;
+  //viberNumber?: string;
   //messageText?: string;
 }
 
 export default function MessagingLauncher({
   //whatsAppNumber,
-  messengerUsername,
-  viberNumber,
+  fbUrl,
+  //viberNumber,
   //messageText = "Hello! I am inquiring about ParkFlow services.",
 }: MessagingLauncherProps) {
   // URL Generators
@@ -20,18 +20,35 @@ export default function MessagingLauncher({
   */
 
   const getMessengerUrl = () => {
-    return `https://m.me/${messengerUsername}`;
+    const splittedUrl = fbUrl?.split("/").filter((item) => !!item) ?? [];
+    console.log(splittedUrl);
+    return splittedUrl?.length > 0
+      ? `https://m.me/${splittedUrl[splittedUrl.length - 1]}`
+      : null;
   };
 
+  /*
   const getViberUrl = () => {
     // Viber uses standard URI scheme
     return `viber://chat?number=%2B${viberNumber}`;
   };
+  */
 
   return (
     <div className="flex items-center sm:flex-row gap-4 pt-1 pb-1 ">
-      {/* WhatsApp Link */}
+      {/* FB Messenger Link */}
+      {getMessengerUrl() && (
+        <a
+          href={getMessengerUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center"
+        >
+          Chat on Messenger
+        </a>
+      )}
 
+      {/* WhatsApp Link */}
       {/* 
       {whatsAppNumber && (
         <a
@@ -45,19 +62,8 @@ export default function MessagingLauncher({
       )}
       */}
 
-      {/* FB Messenger Link */}
-      {messengerUsername && (
-        <a
-          href={getMessengerUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center"
-        >
-          Chat on Messenger
-        </a>
-      )}
-
       {/* Viber Link */}
+      {/* 
       {viberNumber && (
         <a
           href={getViberUrl()}
@@ -66,6 +72,7 @@ export default function MessagingLauncher({
           Chat on Viber
         </a>
       )}
+      */}
     </div>
   );
 }

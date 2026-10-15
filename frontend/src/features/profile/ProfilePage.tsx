@@ -53,12 +53,13 @@ export function ProfilePage({
         phone: (userProfile ? userProfile?.phone : user?.phone) ?? "",
         paymentInfo:
           (userProfile ? userProfile?.paymentInfo : user?.paymentInfo) ?? "",
-        avatarUrl:
-          (userProfile ? userProfile?.avatarUrl : user?.avatarUrl) ?? "",
         buildingNo:
           (userProfile ? userProfile?.buildingNo : user?.buildingNo) ?? "",
         floorNo: (userProfile ? userProfile?.floorNo : user?.floorNo) ?? "",
         unitNo: (userProfile ? userProfile.unitNo : user?.unitNo) ?? "",
+        fbUrl: (userProfile ? userProfile?.fbUrl : user?.fbUrl) ?? "",
+        avatarUrl:
+          (userProfile ? userProfile?.avatarUrl : user?.avatarUrl) ?? "",
       });
     }
   }, [user, reset, userProfile, isLoading]);
@@ -72,12 +73,13 @@ export function ProfilePage({
         lastName: fields.lastName,
         phone: fields.phone.trim() || null,
         paymentInfo: fields.paymentInfo.trim() || null,
-        avatarUrl: fields.avatarUrl.trim() || null,
         ...(showCondoAddress && {
           buildingNo: fields.buildingNo.trim() || null,
           floorNo: fields.floorNo.trim() || null,
           unitNo: fields.unitNo.trim() || null,
         }),
+        fbUrl: fields.fbUrl.trim() || null,
+        avatarUrl: fields.avatarUrl.trim() || null,
       };
       const { data } = await apiClient.patch("/users/me", profileUpdate);
       setUser(data);
@@ -192,6 +194,15 @@ export function ProfilePage({
                     </div>
                   </div>
                 )}
+                <div>
+                  <Label htmlFor="avatarUrl">Facebook URL</Label>
+                  <Input
+                    id="fbUrl"
+                    type="url"
+                    disabled={isDisabled}
+                    {...register("fbUrl")}
+                  />
+                </div>
                 <div>
                   <Label htmlFor="avatarUrl">Avatar URL</Label>
                   <Input
