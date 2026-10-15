@@ -41,7 +41,7 @@ const STATUS_TONE: Record<
   INACTIVE: "muted",
 };
 
-export function ParkingSlotsPage() {
+export function SlotsAvailabilityPage() {
   const { user } = useAuth();
   const { data: properties } = useProperties();
   const [selectedPropertyId, setSelectedPropertyId] = useState<
@@ -53,8 +53,16 @@ export function ParkingSlotsPage() {
     ? selectedPropertyId
     : (user?.propertyId ?? undefined);
   const { data: slots, isLoading } = useSlots(propertyId);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
+  const [chartDate, setChartDate] = useState(() => new Date());
+  const chartRange = getPeriodRange(chartDate, chartPeriod);
   const { data: reservationsData } = useReservations(
-    { propertyId, pageSize: 100 },
+    {
+      propertyId,
+      from: chartRange.start.toISOString(),
+      to: chartRange.end.toISOString(),
+      pageSize: 100,
+    },
     !!propertyId,
   );
   const { data: pendingSlots, isLoading: pendingSlotsLoading } =
@@ -62,16 +70,10 @@ export function ParkingSlotsPage() {
   const setStatus = useSetSlotStatus();
   const reviewSlot = useReviewSlot();
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
-  const [chartDate, setChartDate] = useState(() => new Date());
-  const chartRange = getPeriodRange(chartDate, chartPeriod);
   const reservationsBySlot = new Map<string, Reservation[]>();
   reservationsData?.rows
-    .filter(
-      (reservation) =>
-        ["APPROVED", "CHECKED_IN"].includes(reservation.status) &&
-        new Date(reservation.startAt).getTime() < chartRange.end.getTime() &&
-        new Date(reservation.endAt).getTime() > chartRange.start.getTime(),
+    .filter((reservation) =>
+      ["APPROVED", "CHECKED_IN"].includes(reservation.status),
     )
     .forEach((reservation) => {
       const list = reservationsBySlot.get(reservation.slot.id) ?? [];
@@ -109,7 +111,7 @@ export function ParkingSlotsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center">
-        <h1 className="text-2xl font-semibold mr-3">Parking Slots</h1>
+        <h1 className="text-2xl font-semibold mr-3">Slots Availability</h1>
         {isSuperAdmin && (
           <Select
             className="w-64"
@@ -333,16 +335,18 @@ export function ParkingSlotsPage() {
                 first.name.localeCompare(second.name),
               )
               .map(([zoneId, zone]) => (
-                <ZoneAllocationChart
-                  key={zoneId}
-                  zoneName={zone.name}
-                  slots={zone.slots}
-                  reservationsBySlot={reservationsBySlot}
-                  period={chartPeriod}
-                  range={chartRange}
-                />
+                <div className="border-b border-border pb-3 mb-5">
+                  <ZoneAllocationChart
+                    key={zoneId}
+                    zoneName={zone.name}
+                    slots={zone.slots}
+                    reservationsBySlot={reservationsBySlot}
+                    period={chartPeriod}
+                    range={chartRange}
+                  />
+                </div>
               ))}
-            <div className="flex flex-wrap gap-4 border-t border-border pt-3">
+            <div className="flex flex-wrap gap-4">
               {ALLOCATION_LEGEND.map((item) => (
                 <span
                   key={item.label}

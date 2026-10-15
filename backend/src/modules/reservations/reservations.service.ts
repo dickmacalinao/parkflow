@@ -1,4 +1,4 @@
-import { AuditAction, ReservationStatus, Role, SlotApprovalStatus, type ReservationType } from '@prisma/client';
+import { AuditAction, PaymentStatus, ReservationStatus, Role, SlotApprovalStatus, type ReservationType } from '@prisma/client';
 import type { Request } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { badRequest, conflict, forbidden, notFound } from '../../utils/errors.js';
@@ -6,6 +6,7 @@ import { generateOpaqueToken } from '../../utils/tokens.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { emailTemplates, sendEmail } from '../../lib/email.js';
 import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
+import { env } from '../../config/env.js';
 
 function generateCode(): string {
   return 'RES-' + generateOpaqueToken().slice(0, 8).toUpperCase();
@@ -30,6 +31,7 @@ function priceStay(slot: { hourlyRate: unknown; dailyRate: unknown }, startAt: D
 async function assertReservationAccess(
   req: Request,
   reservation: { propertyId: string; slotId: string },
+  checkApprovership: boolean = true,
 ): Promise<void> {
   if (!req.user) throw forbidden();
   if (req.user.role === Role.SUPER_ADMIN) return;
@@ -37,7 +39,7 @@ async function assertReservationAccess(
   const assignedPropertyId = await getAssignedPropertyId(req.user.id, req.user.role);
   if (reservation.propertyId !== assignedPropertyId) throw notFound('Reservation not found.');
 
-  if (req.user.role === Role.PROPERTY_OWNER) {
+  if (checkApprovership && req.user.role === Role.PROPERTY_OWNER) {
     const ownedSlot = await prisma.parkingSlot.findFirst({
       where: {
         id: reservation.slotId,
@@ -51,13 +53,13 @@ async function assertReservationAccess(
 }
 
 export async function createReservation(
-  input: { propertyId: string; slotId: string; vehicleId?: string; type: ReservationType; startAt: Date; endAt: Date; notes?: string },
+  input: { propertyId: string; slotId: string; vehicleId?: string; plateNumber: string; type: ReservationType; startAt: Date; endAt: Date; notes?: string },
   req: Request
 ) {
   await assertRequestPropertyAccess(req, input.propertyId, false);
   const property = await prisma.property.findFirst({
     where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!property) throw badRequest('Reservations are available only at active properties.');
   const slot = await prisma.parkingSlot.findFirst({
@@ -91,6 +93,26 @@ export async function createReservation(
     if (!vehicle) throw badRequest('Vehicle not found or does not belong to you.');
   }
 
+  // Resolve the vehicle from the plate number: reuse the owner's existing vehicle for that
+  // plate, otherwise register a new one so reservations.vehicleId stays populated.
+  let vehicleId = input.vehicleId;
+  const plateNumber = input.plateNumber?.trim().toUpperCase();
+  if (!vehicleId && plateNumber) {
+    const existing = await prisma.vehicle.findFirst({
+      where: { ownerUserId: req.user!.id, plateNumber, deletedAt: null },
+      select: { id: true },
+    });
+    if (existing) {
+      vehicleId = existing.id;
+    } else {
+      const vehicle = await prisma.vehicle.create({
+        data: { ownerUserId: req.user!.id, plateNumber },
+        select: { id: true },
+      });
+      vehicleId = vehicle.id;
+    }
+  }
+
   const amount = priceStay(slot, input.startAt, input.endAt);
 
   try {
@@ -99,7 +121,7 @@ export async function createReservation(
         code: generateCode(),
         propertyId: input.propertyId,
         slotId: input.slotId,
-        vehicleId: input.vehicleId,
+        vehicleId,
         requestedById: req.user!.id,
         type: input.type,
         startAt: input.startAt,
@@ -113,6 +135,33 @@ export async function createReservation(
     });
 
     await prisma.parkingSlot.update({ where: { id: input.slotId }, data: { status: 'RESERVED' } });
+
+    const slotOwner = await prisma.user.findUnique({
+      where: { id: slot.ownerUserId as string },
+      select: {
+        firstName: true,
+        email: true,
+      },
+    });
+    if (!slotOwner) throw notFound('User not found.');
+
+    const slotDetails = await prisma.parkingSlot.findUnique({
+      where: { id: input.slotId },
+      select: {
+        code: true,
+      },
+    });
+    if (!slotDetails) throw notFound('Parking slot not found.');
+
+    const link = env.CLIENT_URL;
+    const tpl = emailTemplates.createReservation(
+      slotOwner.firstName,
+      property.name,
+      slotDetails.code,
+      link
+    );
+    await sendEmail({ to: slotOwner.email, ...tpl });
+
     await recordAudit({ req, action: AuditAction.CREATE, entityType: 'Reservation', entityId: reservation.id, propertyId: input.propertyId });
 
     return reservation;
@@ -131,24 +180,40 @@ export async function listReservations(filters: {
   propertyId?: string;
   status?: ReservationStatus;
   requestedById?: string;
+  ownerUserId?: string;
   q?: string;
+  from?: Date;
+  to?: Date;
   page: number;
   pageSize: number;
 }, req: Request) {
+
   const assignedPropertyId = req.user?.role === 'SUPER_ADMIN'
     ? filters.propertyId
     : await getAssignedPropertyId(req.user!.id, req.user!.role);
   const where = {
     deletedAt: null,
     ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
-    ...(req.user!.role === Role.PROPERTY_OWNER
+    /*
+    ...(req.user!.role === Role.PROPERTY_OWNER && !filters.isMine
       ? { slot: { ownerUserId: req.user!.id } }
       : {}),
+    */
+    ...(filters.ownerUserId
+      ? { slot: { ownerUserId: filters.ownerUserId } }
+      : {}),
     status: filters.status,
-    requestedById:
-      ['TENANT', 'VISITOR'].includes(req.user!.role)
-        ? req.user!.id
-        : filters.requestedById,
+    requestedById: filters.requestedById,
+    // Date-range overlap filter (used by the allocation chart): reservation starts before the
+    // window ends and ends after the window starts.
+    ...(filters.from || filters.to
+      ? {
+          AND: [
+            ...(filters.from ? [{ endAt: { gt: filters.from } }] : []),
+            ...(filters.to ? [{ startAt: { lt: filters.to } }] : []),
+          ],
+        }
+      : {}),
     ...(filters.q
       ? {
           OR: [
@@ -203,7 +268,7 @@ export async function decideReservation(
 ) {
   const reservation = await prisma.reservation.findUnique({
     where: { id },
-    include: { requestedBy: true, property: true, slot: true },
+    include: { requestedBy: true, property: true, slot: true, payment: true },
   });
   if (!reservation) throw notFound('Reservation not found.');
   await assertReservationAccess(req, reservation);
@@ -216,6 +281,13 @@ export async function decideReservation(
     data: { status, decidedById: req.user!.id, decidedAt: new Date(), decisionReason: reason },
   });
 
+  if (status === ReservationStatus.APPROVED) {
+    await prisma.payment.update({
+      where: { id: reservation.payment?.id },
+      data: { status: PaymentStatus.PAID },
+    });
+  }
+  
   if (status === ReservationStatus.REJECTED) {
     await prisma.parkingSlot.update({ where: { id: reservation.slotId }, data: { status: 'AVAILABLE' } });
   }
@@ -240,10 +312,52 @@ export async function decideReservation(
   return updated;
 }
 
+export async function payReservation(id: string, req: Request) {
+  
+  const reservation = await prisma.reservation.findUnique({ where: { id } });
+  if (!reservation) throw notFound('Reservation not found.');
+  await assertReservationAccess(req, reservation, false);
+
+  const isOwner = reservation.requestedById === req.user!.id;
+  const isRequestor = ['PROPERTY_OWNER', 'TENANT'].includes(req.user!.role);
+  if (!isOwner && !isRequestor) throw forbidden();
+
+  if (
+    reservation.status === ReservationStatus.CANCELLED ||
+    reservation.status === ReservationStatus.COMPLETED ||
+    reservation.status === ReservationStatus.APPROVED
+  ) {
+    throw conflict(`Reservation already ${reservation.status.toLowerCase()}.`);
+  }
+
+  await prisma.payment.create({
+    data: { 
+      reservationId: id, 
+      amount: req.body.amount, 
+      method: req.body.method, 
+      status: PaymentStatus.PENDING,
+      providerRef: req.body.providerRef, 
+      paidAt: new Date(),
+    },
+    select: { id: true },
+  });
+
+  await prisma.reservation.update({ where: { id }, data: { notes: req.body.notes } });
+
+  await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'Reservation', entityId: id, description: 'Payment' });
+
+  const updated = await prisma.reservation.findUnique({
+    where: { id },
+    include: { requestedBy: true, property: true, slot: true, payment: true },
+  });
+
+  return updated;
+}
+
 export async function cancelReservation(id: string, req: Request) {
   const reservation = await prisma.reservation.findUnique({ where: { id } });
   if (!reservation) throw notFound('Reservation not found.');
-  await assertReservationAccess(req, reservation);
+  await assertReservationAccess(req, reservation, false);
 
   const isOwner = reservation.requestedById === req.user!.id;
   const isStaff = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'].includes(req.user!.role);
@@ -265,6 +379,7 @@ export async function cancelReservation(id: string, req: Request) {
 }
 
 /** Parking Attendant scans the QR code / confirmation code at the gate to check a vehicle in. */
+/*
 export async function checkIn(codeOrQr: string, req: Request) {
   const reservation = await prisma.reservation.findFirst({
     where: { OR: [{ code: codeOrQr }, { qrCodeToken: codeOrQr }] },
@@ -302,3 +417,4 @@ export async function checkOut(id: string, req: Request) {
 
   return updated;
 }
+*/

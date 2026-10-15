@@ -6,6 +6,7 @@ export interface Reservation {
   id: string;
   code: string;
   status: string;
+  createdAt: string;
   startAt: string;
   endAt: string;
   amount: string;
@@ -14,11 +15,22 @@ export interface Reservation {
   requestedBy: { id: string; firstName: string; lastName: string; email: string };
 }
 
-export function useReservations(params: { status?: string; propertyId?: string; requestedById?: string; page?: number; pageSize?: number } = {}, enabled = true) {
+export function useReservation(id?: string) {
+  return useQuery({
+    queryKey: ['reservations', id],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/reservations/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useReservations(params: { isMine?: boolean; status?: string; propertyId?: string; ownerUserId?: string; requestedById?: string; from?: string; to?: string; page?: number; pageSize?: number } = {}, enabled = true) {
   return useQuery({
     queryKey: ['reservations', params],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/reservations', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
+    queryFn: async () => {      
+      const { data } = await apiClient.get(params.isMine ? '/reservations/mine' : '/reservations', { params: { pageSize: DEFAULT_PAGE_SIZE, ...params } });
       return data as PaginatedResponse<Reservation>;
     },
     enabled,
@@ -32,6 +44,7 @@ export interface CreateReservationInput {
   startAt: string;
   endAt: string;
   notes?: string;
+  plateNumber?: string;
 }
 
 export function useCreateReservation() {
@@ -44,6 +57,29 @@ export function useCreateReservation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reservations'] });
       qc.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export interface PayReservationInput {
+  id: string;
+  propertyId: string;
+  notes?: string;
+  amount: number;
+  method: string;
+  providerRef: string;
+}
+
+export function usePayReservation() {
+  //const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: PayReservationInput) => {
+      const { data } = await apiClient.patch(`/reservations/${input.id}/pay`, input);
+      return data;
+    },
+    onSuccess: () => {
+      //qc.invalidateQueries({ queryKey: ['reservations'] });
+      //qc.invalidateQueries({ queryKey: ['slots'] });
     },
   });
 }

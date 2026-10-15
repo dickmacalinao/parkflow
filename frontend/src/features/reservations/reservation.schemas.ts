@@ -2,11 +2,21 @@ import { z } from 'zod';
 
 export const newReservationSchema = z
   .object({
-    slotId: z.string().uuid('Choose a bay.'),
+    slotId: z.string().uuid('Choose a slot.'),
     startAt: z.string().min(1, 'Start date/time is required.'),
     endAt: z.string().min(1, 'End date/time is required.'),
+    plateNumber: z.string().trim().max(32).min(1, 'Plate number is required.'),
     notes: z.string().optional(),
   })
   .refine((d) => new Date(d.endAt) > new Date(d.startAt), { message: 'End must be after start.', path: ['endAt'] });
 
 export type NewReservationInput = z.infer<typeof newReservationSchema>;
+
+export const payReservationSchema = z
+  .object({
+    notes: z.string().optional(),
+    method: z.string().trim().min(1, 'Payment method is required.'),
+    providerRef: z.string().trim().max(32).min(1, 'Payment reference is required.'),
+  });
+
+export type PayReservationInput = z.infer<typeof payReservationSchema>;

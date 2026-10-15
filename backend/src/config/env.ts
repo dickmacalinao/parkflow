@@ -16,7 +16,7 @@ const envSchema = z.object({
   BCRYPT_SALT_ROUNDS: z.coerce.number().default(12),
 
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default('ParkFlow <no-reply@parkflow.app>'),
+  EMAIL_FROM: z.string().default('ParkFlow <no-reply@parkflow.cc>'),
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(300),

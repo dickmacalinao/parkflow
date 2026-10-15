@@ -48,6 +48,13 @@ export async function listZones(propertyId: string, req: Request) {
   });
 }
 
+export async function getZone(id: string, req: Request) {
+  await assertZoneAccess(req, id);
+  const zone = await prisma.parkingZone.findFirst({ where: { id } });
+  if (!zone) throw notFound('Parking zone not found.');
+  return zone;
+}
+
 export async function updateZone(id: string, data: Record<string, unknown>, req: Request) {
   await assertZoneAccess(req, id);
   const zone = await prisma.parkingZone.update({ where: { id }, data });

@@ -9,22 +9,21 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
+import { TextInput } from "../../components/ui/TextInput";
 import { Label } from "../../components/ui/Label";
 import { useAuth } from "../../context/AuthContext";
 import { apiClient, getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
+import { ProfileFields } from "./profile.hooks";
+import { type StoredUser } from "../../lib/authStorage";
 
-interface ProfileFields {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  avatarUrl: string;
-  buildingNo: string;
-  floorNo: string;
-  unitNo: string;
-}
-
-export function ProfilePage() {
+export function ProfilePage({
+  userProfile,
+  isLoading = false,
+}: {
+  userProfile?: StoredUser;
+  isLoading?: boolean;
+}) {
   const { user, setUser } = useAuth();
   const { data: properties } = useProperties();
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +32,9 @@ export function ProfilePage() {
     (property) => property.id === user?.propertyId,
   );
   const showCondoAddress =
-    ["TENANT", "PROPERTY_OWNER"].includes(user?.role ?? "") &&
-    assignedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
+    ["TENANT", "PROPERTY_OWNER"].includes(
+      userProfile?.role ?? user?.role ?? "",
+    ) && assignedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
   const {
     register,
     handleSubmit,
@@ -42,17 +42,27 @@ export function ProfilePage() {
     formState: { isSubmitting },
   } = useForm<ProfileFields>();
 
+  const isDisabled = !!userProfile;
+
   useEffect(() => {
-    reset({
-      firstName: user?.firstName ?? "",
-      lastName: user?.lastName ?? "",
-      phone: user?.phone ?? "",
-      avatarUrl: user?.avatarUrl ?? "",
-      buildingNo: user?.buildingNo ?? "",
-      floorNo: user?.floorNo ?? "",
-      unitNo: user?.unitNo ?? "",
-    });
-  }, [user, reset]);
+    if (!isLoading) {
+      reset({
+        firstName:
+          (userProfile ? userProfile?.firstName : user?.firstName) ?? "",
+        lastName: (userProfile ? userProfile?.lastName : user?.lastName) ?? "",
+        phone: (userProfile ? userProfile?.phone : user?.phone) ?? "",
+        paymentInfo:
+          (userProfile ? userProfile?.paymentInfo : user?.paymentInfo) ?? "",
+        buildingNo:
+          (userProfile ? userProfile?.buildingNo : user?.buildingNo) ?? "",
+        floorNo: (userProfile ? userProfile?.floorNo : user?.floorNo) ?? "",
+        unitNo: (userProfile ? userProfile.unitNo : user?.unitNo) ?? "",
+        fbUrl: (userProfile ? userProfile?.fbUrl : user?.fbUrl) ?? "",
+        avatarUrl:
+          (userProfile ? userProfile?.avatarUrl : user?.avatarUrl) ?? "",
+      });
+    }
+  }, [user, reset, userProfile, isLoading]);
 
   const onSubmit = async (fields: ProfileFields) => {
     setError(null);
@@ -62,12 +72,14 @@ export function ProfilePage() {
         firstName: fields.firstName,
         lastName: fields.lastName,
         phone: fields.phone.trim() || null,
-        avatarUrl: fields.avatarUrl.trim() || null,
+        paymentInfo: fields.paymentInfo.trim() || null,
         ...(showCondoAddress && {
           buildingNo: fields.buildingNo.trim() || null,
           floorNo: fields.floorNo.trim() || null,
           unitNo: fields.unitNo.trim() || null,
         }),
+        fbUrl: fields.fbUrl.trim() || null,
+        avatarUrl: fields.avatarUrl.trim() || null,
       };
       const { data } = await apiClient.patch("/users/me", profileUpdate);
       setUser(data);
@@ -78,92 +90,141 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold">My Profile</h1>
-        <p className="text-sm text-muted-foreground">{user?.email}</p>
-      </div>
+    <>
+      {!isLoading && (
+        <div className="mx-auto max-w-2xl space-y-5">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              {userProfile ? "User Profile" : "My Profile"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {userProfile?.email ?? user?.email}
+            </p>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && <Alert tone="destructive">{error}</Alert>}
-            {success && <Alert tone="success">Profile updated.</Alert>}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  autoComplete="given-name"
-                  required
-                  {...register("firstName", { required: true })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  autoComplete="family-name"
-                  required
-                  {...register("lastName", { required: true })}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                autoComplete="tel"
-                {...register("phone")}
-              />
-            </div>
-            <div>
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input id="avatarUrl" type="url" {...register("avatarUrl")} />
-            </div>
-            {showCondoAddress && (
-              <div className="space-y-3 border-t border-border pt-4">
-                <h3 className="font-medium">Property address</h3>
-                <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {error && <Alert tone="destructive">{error}</Alert>}
+                {success && <Alert tone="success">Profile updated.</Alert>}
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="buildingNo">Building No.</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input
-                      id="buildingNo"
+                      id="firstName"
+                      autoComplete="given-name"
                       required
-                      {...register("buildingNo", { required: true })}
+                      disabled={isDisabled}
+                      {...register("firstName", { required: true })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="floorNo">Floor No.</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input
-                      id="floorNo"
+                      id="lastName"
+                      autoComplete="family-name"
                       required
-                      {...register("floorNo", { required: true })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unitNo">Unit No.</Label>
-                    <Input
-                      id="unitNo"
-                      required
-                      {...register("unitNo", { required: true })}
+                      disabled={isDisabled}
+                      {...register("lastName", { required: true })}
                     />
                   </div>
                 </div>
-              </div>
-            )}
-            <div className="flex justify-end">
-              <Button type="submit" isLoading={isSubmitting}>
-                Save Profile
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    disabled={isDisabled}
+                    autoComplete="tel"
+                    {...register("phone")}
+                  />
+                </div>
+
+                {showCondoAddress && (
+                  <div className="space-y-3 border-t border-border pt-4">
+                    <h3 className="font-medium">Property address</h3>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <Label htmlFor="buildingNo">Building No.</Label>
+                        <Input
+                          id="buildingNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("buildingNo", { required: true })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="floorNo">Floor No.</Label>
+                        <Input
+                          id="floorNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("floorNo", { required: true })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unitNo">Unit No.</Label>
+                        <Input
+                          id="unitNo"
+                          required
+                          disabled={isDisabled}
+                          {...register("unitNo", { required: true })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="avatarUrl">Facebook URL</Label>
+                  <Input
+                    id="fbUrl"
+                    type="url"
+                    disabled={isDisabled}
+                    {...register("fbUrl")}
+                  />
+                </div>
+                {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
+                  <div>
+                    <Label htmlFor="paymentInfo">Payment Information</Label>
+                    <TextInput
+                      id="paymentInfo"
+                      required
+                      disabled={isDisabled}
+                      {...register("paymentInfo")}
+                    />
+                    <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                      <p className="text-sm font-medium">
+                        Sample Payment Information
+                      </p>
+                      <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
+                      <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="avatarUrl">Avatar URL</Label>
+                  <Input
+                    id="avatarUrl"
+                    type="url"
+                    disabled={isDisabled}
+                    {...register("avatarUrl")}
+                  />
+                </div>
+                {!isDisabled && (
+                  <div className="flex justify-end">
+                    <Button type="submit" isLoading={isSubmitting}>
+                      Save Profile
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }

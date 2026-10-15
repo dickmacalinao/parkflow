@@ -24,7 +24,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import { useAuth } from "../../context/AuthContext";
-import { formatPrice } from "../../utils/format";
+import { formatPrice, formatDateTime } from "../../utils/format";
 
 function calculateStayPrice(slot: Slot, startAt: Date, endAt: Date): number {
   const durationHours = (endAt.getTime() - startAt.getTime()) / 3_600_000;
@@ -54,16 +54,6 @@ export function NewReservationPage() {
     resolver: zodResolver(newReservationSchema),
   });
   const [startAt, endAt] = watch(["startAt", "endAt"]);
-
-  const formatDateTime = (value?: string) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
-    return date.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  };
 
   const selectedDateRange =
     startAt && endAt
@@ -122,14 +112,15 @@ export function NewReservationPage() {
   const onSubmit = async (data: NewReservationInput) => {
     setServerError(null);
     try {
-      await create.mutateAsync({
+      const reservation = await create.mutateAsync({
         ...data,
         propertyId,
         type: "TENANT",
         startAt: new Date(data.startAt).toISOString(),
         endAt: new Date(data.endAt).toISOString(),
       });
-      navigate("/reservations");
+
+      navigate(`/my-reservations/${reservation.id}`);
     } catch (err) {
       setServerError(
         getApiErrorMessage(err, "Could not create the reservation."),
@@ -200,11 +191,11 @@ export function NewReservationPage() {
 
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">
-                Available bays for selected dates
+                Available slots for selected dates
               </legend>
               {!hasValidDateRange ? (
                 <p className="text-sm text-muted-foreground">
-                  Select a valid Start and End date to see available bays.
+                  Select a valid Start and End date to see available slots.
                 </p>
               ) : slotsLoading ? (
                 <Spinner />
@@ -244,11 +235,21 @@ export function NewReservationPage() {
                 </div>
               ) : (
                 <Alert tone="info">
-                  No bays are available for this date and time range.
+                  No slots are available for this date and time range.
                 </Alert>
               )}
               <FormError message={errors.slotId?.message} />
             </fieldset>
+
+            <div>
+              <Label htmlFor="plateNumber">Vehicle plate no.</Label>
+              <Input
+                id="plateNumber"
+                placeholder="e.g. ABC 123"
+                {...register("plateNumber")}
+              />
+              <FormError message={errors.plateNumber?.message} />
+            </div>
 
             <div>
               <Label htmlFor="notes">Notes (optional)</Label>

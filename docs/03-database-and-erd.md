@@ -169,9 +169,22 @@ alone cannot guarantee that under concurrency.
 
 ```bash
 npx prisma migrate dev --name init        # creates tables from schema.prisma
-psql "$DATABASE_URL" -f prisma/sql/add-reservation-overlap-constraint.sql
+npx prisma db execute --file prisma/sql/add-reservation-overlap-constraint.sql
 npm run seed                              # demo users (one per role) + one property + 12 bays
 ```
 
 Seeded accounts (password `Passw0rd!` for all): `super.admin@`, `admin@`, `owner@`, `manager@`,
 `attendant@`, `tenant@`, `visitor@parkflow.app`.
+
+
+## Migrations & database changes
+
+Step 1: First, make your desired changes (adding models, columns, indexes, or relations) inside prisma/schema.prisma:
+Step 2: Run the Migration Command for local databse
+```bash
+npx prisma migrate dev --name <change_desc>
+```
+Step 2: Run the Migration Command to target (docker hosted) database. Need to modify the port in .env to point to docker hosted port
+```bash
+npx prisma migrate deploy
+```

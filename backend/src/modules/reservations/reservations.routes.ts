@@ -13,6 +13,7 @@ import * as reservationsService from './reservations.service.js';
 const router = Router();
 const idParam = z.object({ id: z.string().uuid() });
 const STAFF_ROLES = ['SUPER_ADMIN', 'PROPERTY_MANAGER', 'PROPERTY_OWNER'] as const;
+const REQUESTOR_ROLES = ['PROPERTY_OWNER', 'TENANT'] as const;
 
 /**
  * @openapi
@@ -38,7 +39,7 @@ router.post(
  * @openapi
  * /api/reservations:
  *   get:
- *     summary: List reservations (own reservations for tenants/visitors, all for staff)
+ *     summary: List reservations (all reservations)
  *     tags: [Reservations]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -48,15 +49,47 @@ router.get(
   '/',
   requireAuth,
   validate({ query: listReservationsQuerySchema }),
+  asyncHandler(async (req, res) => {    
+    const filters = req.query as unknown as z.infer<typeof listReservationsQuerySchema>;    
+    res.json(await reservationsService.listReservations(filters, req));
+  })
+);
+
+/**
+ * @openapi
+ * /api/reservations/mine:
+ *   get:
+ *     summary: List reservations (own reservations for tenants/visitors)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated reservation list }
+ */
+router.get(
+  '/mine',
+  requireAuth,
+  validate({ query: listReservationsQuerySchema }),
   asyncHandler(async (req, res) => {
     const isStaff = (STAFF_ROLES as readonly string[]).includes(req.user!.role);
     const filters = req.query as unknown as z.infer<typeof listReservationsQuerySchema>;
     // Non-staff users can only ever see their own reservations, regardless of what they pass in requestedById.
-    const scoped = isStaff ? filters : { ...filters, requestedById: req.user!.id };
+    const scoped = isStaff ? filters : { ...filters, isMine: true, requestedById: req.user!.id };
     res.json(await reservationsService.listReservations(scoped, req));
   })
 );
 
+//TODO: Implement validation for property scope in reservation queries
+/**
+ * @openapi
+ * /api/reservations/{id}:
+ *   get:
+ *     summary: Get reservation detail
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Reservation detail }
+ *       404: { description: Not found }
+ */
 router.get(
   '/:id',
   requireAuth,
@@ -68,6 +101,26 @@ router.get(
       return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Reservation not found.' } });
     }
     res.json(reservation);
+  })
+);
+
+/**
+ * @openapi
+ * /api/reservations/{id}/pay:
+ *   patch:
+ *     summary: Pay for a reservation (owner or tenant)
+ *     tags: [Reservations]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Reservation paid }
+ */
+router.patch(
+  '/:id/pay',
+  requireAuth,
+  validate({ params: idParam }),
+  requireRole(...REQUESTOR_ROLES),
+  asyncHandler(async (req, res) => {
+    res.json(await reservationsService.payReservation(req.params.id, req));
   })
 );
 
@@ -111,7 +164,7 @@ router.post(
 );
 
 /**
- * @openapi
+ * FOR FUTURE // @openapi
  * /api/reservations/check-in:
  *   post:
  *     summary: Check a vehicle in by scanning its confirmation code or QR token (Attendant)
@@ -120,6 +173,7 @@ router.post(
  *     responses:
  *       200: { description: Reservation moved to CHECKED_IN, slot marked OCCUPIED }
  */
+/*
 router.post(
   '/check-in',
   requireAuth,
@@ -129,9 +183,11 @@ router.post(
     res.json(await reservationsService.checkIn(req.body.code, req));
   })
 );
+*/
+
 
 /**
- * @openapi
+ * FOR FUTURE // @openapi
  * /api/reservations/{id}/check-out:
  *   post:
  *     summary: Check a vehicle out (Attendant)
@@ -140,6 +196,7 @@ router.post(
  *     responses:
  *       200: { description: Reservation moved to CHECKED_OUT, slot freed }
  */
+/*
 router.post(
   '/:id/check-out',
   requireAuth,
@@ -149,5 +206,6 @@ router.post(
     res.json(await reservationsService.checkOut(req.params.id, req));
   })
 );
+*/
 
 export default router;

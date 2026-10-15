@@ -4,12 +4,14 @@ export interface StoredUser {
   firstName: string;
   lastName: string;
   phone?: string | null;
+  paymentInfo?: string | null;
   propertyId?: string | null;
   buildingNo?: string | null;
   floorNo?: string | null;
   unitNo?: string | null;
   role: string;
   status: string;
+  fbUrl?: string | null;
   avatarUrl?: string | null;
 }
 

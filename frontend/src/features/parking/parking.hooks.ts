@@ -57,6 +57,17 @@ export function useZones(propertyId?: string) {
   });
 }
 
+export function useZone(id?: string) {
+  return useQuery({
+    queryKey: ['zones', id],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/parking/zones/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
 export function useCreateZone() {
   const qc = useQueryClient();
   return useMutation({

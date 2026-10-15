@@ -36,3 +36,31 @@ export const RESERVATION_STATUS_TYPES = [
   //{ value: "CHECKED_IN", label: "Checked In" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
+
+export const PAYMENT_METHOD_TYPES = [
+  { value: "CARD", label: "Card" },
+  {
+    value: "CASH",
+    label: "Cash",
+  },
+  { value: "WALLET", label: "GCash/PayMaya/etc." },
+  { value: "BANK_TRANSFER", label: "Bank Transfer" },
+
+  { value: "COMPLIMENTARY", label: "Complimentary" },
+  { value: "OTHER", label: "Other" },
+];
+
+export const STATUS_TONE: Record<
+  string,
+  "default" | "success" | "destructive" | "muted"
+> = {
+  PENDING: "default",
+  APPROVED: "success",
+  REJECTED: "destructive",
+  CANCELLED: "muted",
+  CHECKED_IN: "success",
+  CHECKED_OUT: "muted",
+  COMPLETED: "muted",
+  EXPIRED: "muted",
+  NO_SHOW: "destructive",
+};

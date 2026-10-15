@@ -19,6 +19,8 @@ export interface AdminUser {
   lastName: string;
   role: string;
   status: string;
+  paymentInfo: boolean | null;
+  fbUrl: string | null;
   propertyId: string | null;
   createdAt: string;
 }

@@ -39,9 +39,9 @@ router.post(
 
 /**
  * @openapi
- * /api/properties:
+ * /api/properties/available:
  *   get:
- *     summary: List properties
+ *     summary: List available properties
  *     tags: [Properties]
  *     security: [{ bearerAuth: [] }]
  *     responses:
@@ -54,6 +54,16 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/properties:
+ *   get:
+ *     summary: List properties
+ *     tags: [Properties]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated property list }
+ */
 router.get(
   '/',
   requireAuth,

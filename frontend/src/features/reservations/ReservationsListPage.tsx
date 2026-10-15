@@ -19,36 +19,21 @@ import { RESERVATION_STATUS_TYPES } from "../../components/Types";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { Pagination } from "../../components/ui/Pagination";
 import { formatPrice } from "../../utils/format";
+import { STATUS_TONE } from "../../components/Types";
 
-const STATUS_TONE: Record<
-  string,
-  "default" | "success" | "destructive" | "muted"
-> = {
-  PENDING: "default",
-  APPROVED: "success",
-  REJECTED: "destructive",
-  CANCELLED: "muted",
-  CHECKED_IN: "success",
-  CHECKED_OUT: "muted",
-  COMPLETED: "muted",
-  EXPIRED: "muted",
-  NO_SHOW: "destructive",
-};
+export interface ReservationsListPageProps {
+  mine?: boolean;
+}
 
-export function ReservationsListPage() {
+export function ReservationsListPage({
+  mine = false,
+}: ReservationsListPageProps) {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState("");
   const [requestedByFilter, setRequestedByFilter] = useState("");
   const [propertyFilter, setPropertyFilter] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useReservations({
-    status: statusFilter || undefined,
-    requestedById: requestedByFilter || undefined,
-    propertyId: propertyFilter || undefined,
-    page,
-  });
-  const reservations = data?.rows;
   const decide = useDecideReservation();
   const cancel = useCancelReservation();
 
@@ -62,18 +47,30 @@ export function ReservationsListPage() {
   const requesters = usersData?.rows;
   const { data: properties } = useProperties({}, isSuperAdmin);
 
+  const { data, isLoading } = useReservations({
+    isMine: mine || undefined,
+    ownerUserId:
+      !mine && user?.role === "PROPERTY_OWNER" ? user?.id : undefined,
+    status: statusFilter || undefined,
+    requestedById:
+      ((mine ? user?.id : undefined) ?? requestedByFilter) || undefined,
+    propertyId: propertyFilter || undefined,
+    page,
+  });
+  const reservations = data?.rows;
+
   return (
     <div className="space-y-4">
-      {user?.role !== "SUPER_ADMIN" && (
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">
-            {user?.role === "TENANT" ? "My Reservations" : "Reservations"}
-          </h1>
-          <Link to="/reservations/new">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">
+          {mine ? "My Reservations" : "Reservations"}
+        </h1>
+        {mine && (
+          <Link to="/my-reservations/new">
             <Button>New Reservation</Button>
           </Link>
-        </div>
-      )}
+        )}
+      </div>
 
       <section
         aria-label="Filter reservations"
@@ -182,8 +179,9 @@ export function ReservationsListPage() {
             <TR>
               <TH>Code</TH>
               <TH>Property / Bay</TH>
-              {isStaff && <TH>Requested by</TH>}
-              <TH>Dates</TH>
+              {isStaff && !mine && <TH>Requested by</TH>}
+              <TH>Reservation Dates</TH>
+              <TH>Requested Date</TH>
               <TH className="text-right">Amount</TH>
               <TH className="text-center">Status</TH>
               <TH className="text-right">Actions</TH>
@@ -202,11 +200,22 @@ export function ReservationsListPage() {
             )}
             {reservations?.map((r) => (
               <TR key={r.id}>
-                <TD className="font-mono text-xs">{r.code}</TD>
+                <TD className="font-mono text-xs">
+                  <Link
+                    to={
+                      mine
+                        ? `/my-reservations/${r.id}`
+                        : `/reservations/${r.id}`
+                    }
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {r.code}
+                  </Link>
+                </TD>
                 <TD>
                   {r.property.name} / {r.slot.code}
                 </TD>
-                {isStaff && (
+                {isStaff && !mine && (
                   <TD>
                     {r.requestedBy.firstName} {r.requestedBy.lastName}
                   </TD>
@@ -214,6 +223,9 @@ export function ReservationsListPage() {
                 <TD className="text-xs">
                   {new Date(r.startAt).toLocaleString()} -&gt;{" "}
                   {new Date(r.endAt).toLocaleString()}
+                </TD>
+                <TD className="text-xs">
+                  {new Date(r.createdAt).toLocaleString()}
                 </TD>
                 <TD className="text-right">{formatPrice(r.amount)}</TD>
                 <TD className="text-center">
@@ -226,7 +238,7 @@ export function ReservationsListPage() {
                     ["PENDING", "APPROVED"].includes(r.status)) && (
                     <div className="flex justify-end">
                       <ActionMenu>
-                        {isStaff && r.status === "PENDING" && (
+                        {isStaff && !mine && r.status === "PENDING" && (
                           <>
                             <ActionMenuItem
                               onClick={() =>

@@ -14,7 +14,6 @@ import { useAuth } from "../../context/AuthContext";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useClientPagination } from "../../lib/pagination";
 import { Pagination } from "../../components/ui/Pagination";
-import { useProperties } from "../properties/properties.hooks";
 import {
   useCreateSlot,
   useDeleteSlot,
@@ -66,8 +65,6 @@ const EMPTY_FORM: SlotFormValues = {
 export function MyParkingSlotsPage() {
   const { user } = useAuth();
   const propertyId = user?.propertyId ?? undefined;
-  const { data: properties } = useProperties();
-  const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading: zonesLoading } = useZones(propertyId);
   const { data: slots, isLoading: slotsLoading } = useMySlots({
     includeDeleted: true,
@@ -177,9 +174,6 @@ export function MyParkingSlotsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">My Parking Slots</h1>
-          {property && (
-            <p className="text-sm text-muted-foreground">{property.name}</p>
-          )}
         </div>
         <Button onClick={openCreate} disabled={!zones?.length}>
           Register Parking Slot

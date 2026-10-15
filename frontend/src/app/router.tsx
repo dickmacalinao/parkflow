@@ -10,13 +10,16 @@ import { VerifyEmailPage } from "../features/auth/VerifyEmailPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { PropertiesListPage } from "../features/properties/PropertiesListPage";
 import { PropertyDetailPage } from "../features/properties/PropertyDetailPage";
-import { ParkingSlotsPage } from "../features/parking/ParkingSlotsPage";
+import { SlotsAvailabilityPage } from "../features/parking/SlotsAvailabilityPage";
 import { MyParkingSlotsPage } from "../features/parking/MyParkingSlotsPage";
 import { ZonesPage } from "../features/parking/ZonesPage";
-import { ReservationsListPage } from "../features/reservations/ReservationsListPage";
+import { ReservationsPage } from "../features/reservations/ReservationsPage";
+import { MyReservationsPage } from "../features/reservations/MyReservationsPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
+import { ReservationDetailPage } from "../features/reservations/ReservationDetailPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
+import { UserProfilePage } from "@/features/profile/UserProfilePage";
 import { AuditLogPage } from "../features/admin/AuditLogPage";
 import { ProfilePage } from "../features/profile/ProfilePage";
 import { UnauthorizedPage } from "./UnauthorizedPage";
@@ -24,7 +27,6 @@ import { NotFoundPage } from "./NotFoundPage";
 
 const PROPERTY_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ADMIN_ROLES = ["SUPER_ADMIN"];
-const USER_ROLES = ["SUPER_ADMIN", "PROPERTY_MANAGER"];
 const ZONE_ROLES = ["PROPERTY_MANAGER"];
 const OWNER_ROLES = ["PROPERTY_OWNER"];
 
@@ -46,9 +48,18 @@ export const router = createBrowserRouter([
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
           { path: "/profile", element: <ProfilePage /> },
-          { path: "/reservations", element: <ReservationsListPage /> },
-          { path: "/reservations/new", element: <NewReservationPage /> },
-          { path: "/parking", element: <ParkingSlotsPage /> },
+          {
+            path: "/reservations",
+            element: <ReservationsPage />,
+          },
+          {
+            path: "/my-reservations",
+            element: <MyReservationsPage />,
+          },
+          { path: "/reservations/:id", element: <ReservationDetailPage /> },
+          { path: "/my-reservations/new", element: <NewReservationPage /> },
+          { path: "/my-reservations/:id", element: <ReservationDetailPage /> },
+          { path: "/availability", element: <SlotsAvailabilityPage /> },
           {
             element: <RoleGuard roles={ZONE_ROLES} />,
             children: [{ path: "/zones", element: <ZonesPage /> }],
@@ -70,9 +81,16 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            element: <RoleGuard roles={USER_ROLES} />,
+            element: <RoleGuard roles={PROPERTY_ROLES} />,
             children: [{ path: "/admin/users", element: <UsersAdminPage /> }],
           },
+          {
+            element: <RoleGuard roles={PROPERTY_ROLES} />,
+            children: [
+              { path: "/admin/users/:userId", element: <UserProfilePage /> },
+            ],
+          },
+
           {
             element: <RoleGuard roles={ADMIN_ROLES} />,
             children: [

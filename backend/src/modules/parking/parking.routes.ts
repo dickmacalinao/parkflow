@@ -63,6 +63,41 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/zones/{id}:
+ *   get:
+ *     summary: Get one zone by ID for a property
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Zone detail }
+ *       404: { description: Not found }
+ */
+router.get(
+  '/zones/:id',
+  requireAuth,
+  validate({ params: idParam }),
+  asyncHandler(async (req, res) => {
+    res.json(await parkingService.getZone(req.params.id, req));
+  })
+);
+
+/**
+ * @openapi
+ * /api/parking/zones/{id}:
+ *   patch:
+ *     summary: Patch a zone by ID for a property
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: propertyId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Zones with slot counts }
+ */
 router.patch(
   '/zones/:id',
   requireAuth,
@@ -73,6 +108,22 @@ router.patch(
   })
 );
 
+
+/**
+ * @openapi
+ * /api/parking/zones/delete/:id:
+ *   delete:
+ *     summary: Delete a zone by ID for a property
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: propertyId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Zones with slot counts }
+ */
 router.delete(
   '/zones/:id',
   requireAuth,
@@ -143,6 +194,16 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/slots/pending-verification:
+ *   get:
+ *     summary: List parking slots pending verification
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated slot list }
+ */
 router.get(
   '/slots/pending-verification',
   requireAuth,
@@ -152,6 +213,16 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/slots/:id/approval:
+ *   get:
+ *     summary: Parking slot approval
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated slot list }
+ */
 router.patch(
   '/slots/:id/approval',
   requireAuth,
@@ -162,6 +233,16 @@ router.patch(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/slots
+ *   get:
+ *     summary: List of Parking slots
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Paginated slot list }
+ */
 router.get(
   '/slots',
   requireAuth,
@@ -171,6 +252,16 @@ router.get(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/slots/:id
+ *   get:
+ *     summary: Get details of a specific parking slot
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ 
+ */
 router.patch(
   '/slots/:id',
   requireAuth,
@@ -201,6 +292,16 @@ router.patch(
   })
 );
 
+/**
+ * @openapi
+ * /api/parking/slots/{id}:
+ *   patch:
+ *     summary: Delete a slot 
+ *     tags: [Parking]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Updated slot }
+ */
 router.delete(
   '/slots/:id',
   requireAuth,
