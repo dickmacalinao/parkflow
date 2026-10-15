@@ -142,24 +142,7 @@ export function ProfilePage({
                     {...register("phone")}
                   />
                 </div>
-                {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
-                  <div>
-                    <Label htmlFor="paymentInfo">Payment Information</Label>
-                    <TextInput
-                      id="paymentInfo"
-                      required
-                      disabled={isDisabled}
-                      {...register("paymentInfo")}
-                    />
-                    <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-                      <p className="text-sm font-medium">
-                        Sample Payment Information
-                      </p>
-                      <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
-                      <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
-                    </div>
-                  </div>
-                )}
+
                 {showCondoAddress && (
                   <div className="space-y-3 border-t border-border pt-4">
                     <h3 className="font-medium">Property address</h3>
@@ -203,6 +186,24 @@ export function ProfilePage({
                     {...register("fbUrl")}
                   />
                 </div>
+                {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
+                  <div>
+                    <Label htmlFor="paymentInfo">Payment Information</Label>
+                    <TextInput
+                      id="paymentInfo"
+                      required
+                      disabled={isDisabled}
+                      {...register("paymentInfo")}
+                    />
+                    <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                      <p className="text-sm font-medium">
+                        Sample Payment Information
+                      </p>
+                      <p>GCash or Maya: 0XXX-XXX-XXXXX - Juan Dela Cruz</p>
+                      <p>BDO: XXXXXXXXXXXX - Juan Dela Cruz</p>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="avatarUrl">Avatar URL</Label>
                   <Input

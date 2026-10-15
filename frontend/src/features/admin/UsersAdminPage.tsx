@@ -234,6 +234,8 @@ export function UsersAdminPage() {
               {isSuperAdmin && <TH>Property</TH>}
               <TH>Role</TH>
               <TH className="text-center">Status</TH>
+              <TH className="text-center">Has Fb URL?</TH>
+              <TH className="text-center">Has Payment Info?</TH>
               {canManageUsers && <TH className="text-right">Actions</TH>}
             </TR>
           </THead>
@@ -275,6 +277,12 @@ export function UsersAdminPage() {
                     {u.status.replace(/_/g, " ").toLowerCase()}
                   </Badge>
                 </TD>
+                <TH className="text-center">
+                  {u?.fbUrl ? <span>&#10003;</span> : null}
+                </TH>
+                <TH className="text-center">
+                  {u?.paymentInfo ? <span>&#10003;</span> : null}
+                </TH>
                 {canManageUsers && (
                   <TD className="text-right">
                     {(user?.role === "SUPER_ADMIN" &&
