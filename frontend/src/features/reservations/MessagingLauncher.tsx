@@ -24,7 +24,7 @@ export default function MessagingLauncher({
     console.log(splittedUrl);
     return splittedUrl?.length > 0
       ? `https://m.me/${splittedUrl[splittedUrl.length - 1]}`
-      : null;
+      : undefined;
   };
 
   /*

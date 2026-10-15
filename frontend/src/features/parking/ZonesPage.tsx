@@ -12,7 +12,6 @@ import { Table, TBody, TD, TH, THead, TR } from "../../components/ui/Table";
 import { getApiErrorMessage } from "../../lib/apiClient";
 import { useClientPagination } from "../../lib/pagination";
 import { Pagination } from "../../components/ui/Pagination";
-import { useProperties } from "../properties/properties.hooks";
 import {
   useCreateZone,
   useDeleteZone,
@@ -30,8 +29,6 @@ interface ZoneFormValues {
 export function ZonesPage() {
   const { user } = useAuth();
   const propertyId = user?.propertyId ?? undefined;
-  const { data: properties } = useProperties();
-  const property = properties?.find((item) => item.id === propertyId);
   const { data: zones, isLoading } = useZones(propertyId);
   const {
     page,
