@@ -110,6 +110,7 @@ export function RegisterPage() {
                 id="propertyId"
                 disabled={propertiesLoading}
                 {...register("propertyId")}
+                className="w-full"
               >
                 <option value="">
                   {propertiesLoading
