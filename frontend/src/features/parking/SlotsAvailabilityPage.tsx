@@ -53,7 +53,7 @@ export function SlotsAvailabilityPage() {
     ? selectedPropertyId
     : (user?.propertyId ?? undefined);
   const { data: slots, isLoading } = useSlots(propertyId);
-  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("MONTH");
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("WEEK");
   const [chartDate, setChartDate] = useState(() => new Date());
   const chartRange = getPeriodRange(chartDate, chartPeriod);
   const { data: reservationsData } = useReservations(

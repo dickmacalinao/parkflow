@@ -14,7 +14,7 @@ export function getPeriodRange(date: Date, period: ChartPeriod): ChartRange {
   start.setHours(0, 0, 0, 0);
   const end = new Date(start);
   if (period === "WEEK") {
-    start.setDate(start.getDate() - start.getDay());
+    start.setDate(start.getDate() - 3);
     end.setDate(start.getDate() + 7);
   } else if (period === "MONTH") {
     start.setDate(1);
