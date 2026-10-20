@@ -106,7 +106,7 @@ export function SlotsAvailabilityPage() {
     const now = new Date();
     const nextOpen = reservations
       .filter((r) => r.status === "APPROVED" || r.status === "CHECKED_IN")
-      .map((r) => new Date(r.to))
+      .map((r) => new Date(r.endAt))
       .filter((date) => date > now)
       .sort((a, b) => a.getTime() - b.getTime())[0];
 
