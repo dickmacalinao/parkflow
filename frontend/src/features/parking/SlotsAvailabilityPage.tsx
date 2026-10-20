@@ -99,6 +99,27 @@ export function SlotsAvailabilityPage() {
     pendingSlotsByZone.set(slot.zone.id, zone);
   });
 
+  const getNextOpenAvailability = (slot: Slot) => {
+    if (slot.status !== "RESERVED") return "";
+
+    const reservations = reservationsBySlot.get(slot.id) ?? [];
+    const now = new Date();
+    const nextOpen = reservations
+      .filter((r) => r.status === "APPROVED" || r.status === "CHECKED_IN")
+      .map((r) => new Date(r.to))
+      .filter((date) => date > now)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+
+    const returnDate = nextOpen ?? now;
+    return (
+      "Free " +
+      returnDate.toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+      })
+    );
+  };
+
   const onReview = async (slot: Slot, decision: "APPROVED" | "REJECTED") => {
     setReviewError(null);
     try {
@@ -175,6 +196,9 @@ export function SlotsAvailabilityPage() {
                       >
                         {slot.status.toLowerCase()}
                       </Badge>
+                      <div className="text-xs font-medium mt-2 text-success">
+                        {getNextOpenAvailability(slot).toLocaleString()}
+                      </div>
                       <div className="mt-2 flex justify-center gap-1">
                         {slot.status === "BLOCKED" ? (
                           <Button
