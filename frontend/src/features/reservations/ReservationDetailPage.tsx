@@ -248,7 +248,8 @@ export function ReservationDetailPage() {
                     <Label htmlFor="paymentMethod">Payment Method</Label>
                     <Select
                       id="paymentMethod"
-                      aria-label="Filter users by property w-full"
+                      aria-label="Filter users by property"
+                      className="w-full"
                       disabled={!isForPayment}
                       {...register("method")}
                     >
