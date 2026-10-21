@@ -243,7 +243,9 @@ function WeekMonthGrid({
                     "h-6 px-1 py-1 text-center text-[9px]",
                     booked && "bg-amber-500/80",
                     !booked && "bg-card",
-                    slot.status === "BLOCKED" && "bg-muted-foreground/30",
+                    !booked &&
+                      slot.status === "BLOCKED" &&
+                      "bg-muted-foreground/30",
                     day.getTime() === todayMs && "border-x-2 border-x-red-500",
                   )}
                 />

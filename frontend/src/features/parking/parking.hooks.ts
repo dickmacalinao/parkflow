@@ -11,6 +11,7 @@ export interface Slot {
   hourlyRate: string | null;
   dailyRate: string;
   monthlyRate: string | null;
+  ownerUserId: string;
   isEvCharging: boolean;
   deletedAt?: string | null;
   zone: { id: string; name: string; propertyId: string };
@@ -157,6 +158,17 @@ export function useMySlots(params: { includeDeleted?: boolean } = {}) {
       const { data } = await apiClient.get('/parking/slots/mine', { params });
       return data as Slot[];
     },
+  });
+}
+
+export function useSetMySlotStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { data } = await apiClient.patch(`/parking/slots/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-slots'] }),
   });
 }
 

@@ -29,17 +29,7 @@ import { Spinner } from "../../components/ui/Spinner";
 import { ActionMenu, ActionMenuItem } from "../../components/ui/ActionMenu";
 import { Alert } from "../../components/ui/Alert";
 import { getApiErrorMessage } from "../../lib/apiClient";
-
-const STATUS_TONE: Record<
-  string,
-  "default" | "success" | "destructive" | "muted"
-> = {
-  AVAILABLE: "success",
-  RESERVED: "default",
-  OCCUPIED: "destructive",
-  BLOCKED: "muted",
-  INACTIVE: "muted",
-};
+import { STATUS_TONE } from "../../components/Types";
 
 export function SlotsAvailabilityPage() {
   const { user } = useAuth();
@@ -197,37 +187,44 @@ export function SlotsAvailabilityPage() {
                         {slot.status.toLowerCase()}
                       </Badge>
                       <div className="text-xs font-medium mt-2 text-success">
-                        {getNextOpenAvailability(slot).toLocaleString()}
+                        {getNextOpenAvailability(slot)}
                       </div>
-                      <div className="mt-2 flex justify-center gap-1">
-                        {slot.status === "BLOCKED" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setStatus.mutate({
-                                id: slot.id,
-                                status: "AVAILABLE",
-                              })
-                            }
-                          >
-                            Unblock
-                          </Button>
-                        ) : slot.status === "AVAILABLE" ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setStatus.mutate({
-                                id: slot.id,
-                                status: "BLOCKED",
-                              })
-                            }
-                          >
-                            Block
-                          </Button>
-                        ) : null}
-                      </div>
+                      {(user?.id === slot?.ownerUserId ||
+                        ["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(
+                          user?.role ?? "",
+                        )) && (
+                        <div className="mt-2 flex justify-center gap-1">
+                          {slot.status === "BLOCKED" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                setStatus.mutate({
+                                  id: slot.id,
+                                  status: "AVAILABLE",
+                                })
+                              }
+                            >
+                              Unblock
+                            </Button>
+                          ) : ["AVAILABLE", "RESERVED"].includes(
+                              slot.status,
+                            ) ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                setStatus.mutate({
+                                  id: slot.id,
+                                  status: "BLOCKED",
+                                })
+                              }
+                            >
+                              Block
+                            </Button>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

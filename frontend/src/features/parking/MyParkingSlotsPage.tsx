@@ -20,8 +20,10 @@ import {
   useMySlots,
   useUpdateSlot,
   useZones,
+  useSetMySlotStatus,
   type Slot,
 } from "./parking.hooks";
+import { STATUS_TONE } from "../../components/Types";
 
 const SLOT_TYPES = [
   "STANDARD",
@@ -82,6 +84,7 @@ export function MyParkingSlotsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const setStatus = useSetMySlotStatus();
   const {
     register,
     handleSubmit,
@@ -115,6 +118,21 @@ export function MyParkingSlotsPage() {
     setError(null);
     setEditingSlot(slot);
     setDialogOpen(true);
+  };
+
+  const handleBlock = (slot: Slot) => {
+    setStatus.mutate({
+      id: slot.id,
+      status: "BLOCKED",
+    });
+  };
+
+  const handleUnBlock = (slot: Slot) => {
+    const data = setStatus.mutate({
+      id: slot.id,
+      status: "AVAILABLE",
+    });
+    console.log(data);
   };
 
   const closeDialog = () => {
@@ -190,10 +208,11 @@ export function MyParkingSlotsPage() {
               <TH>Zone</TH>
               <TH>Code</TH>
               <TH>Type</TH>
+              <TH>Slot Status</TH>
               <TH>Hourly Rate</TH>
               <TH>Daily Rate</TH>
               <TH>Monthly Rate</TH>
-              <TH>Status</TH>
+              <TH>Approval Status</TH>
               <TH>Actions</TH>
             </TR>
           </THead>
@@ -203,6 +222,14 @@ export function MyParkingSlotsPage() {
                 <TD>{slot.zone.name}</TD>
                 <TD className="font-mono">{slot.code}</TD>
                 <TD>{slot.type.replace(/_/g, " ").toLowerCase()}</TD>
+                <TD>
+                  <Badge
+                    tone={STATUS_TONE[slot.status] ?? "muted"}
+                    className="mt-1"
+                  >
+                    {slot.status.toLowerCase()}
+                  </Badge>
+                </TD>
                 <TD>{slot.hourlyRate ? `$${slot.hourlyRate}` : "—"}</TD>
                 <TD>${slot.dailyRate}</TD>
                 <TD>{slot.monthlyRate ? `$${slot.monthlyRate}` : "—"}</TD>
@@ -235,6 +262,16 @@ export function MyParkingSlotsPage() {
                       <ActionMenuItem onClick={() => openEdit(slot)}>
                         Edit
                       </ActionMenuItem>
+                      {slot.status !== "BLOCKED" && (
+                        <ActionMenuItem onClick={() => handleBlock(slot)}>
+                          Block
+                        </ActionMenuItem>
+                      )}
+                      {slot.status === "BLOCKED" && (
+                        <ActionMenuItem onClick={() => handleUnBlock(slot)}>
+                          Unblock
+                        </ActionMenuItem>
+                      )}
                       <ActionMenuItem
                         destructive
                         onClick={() => onDelete(slot)}

@@ -263,8 +263,26 @@ export async function setSlotStatus(id: string, status: SlotStatus, req: Request
     throw notFound('Only approved parking slots can change availability.');
   }
 
-  const updated = await prisma.parkingSlot.update({ where: { id }, data: { status } });
-  await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'ParkingSlot', entityId: id, description: `Status -> ${status}` });
+  let finalStatus: SlotStatus = status;
+
+  if (status === SlotStatus.AVAILABLE) {
+    const reservatios = await prisma.reservation.findMany({
+      where: {
+        slotId: id,
+        OR: [
+          { status: 'PENDING', },
+          { status: 'APPROVED', },
+        ],
+        
+        endAt: { gte: new Date() },
+      },
+    });
+
+    finalStatus = reservatios.length > 0 ? SlotStatus.RESERVED : SlotStatus.AVAILABLE;
+  }
+
+  const updated = await prisma.parkingSlot.update({ where: { id }, data: { status: finalStatus } });
+  await recordAudit({ req, action: AuditAction.UPDATE, entityType: 'ParkingSlot', entityId: id, description: `Status -> ${finalStatus}` });
   return updated;
 }
 

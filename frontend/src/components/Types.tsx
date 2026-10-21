@@ -55,6 +55,8 @@ export const STATUS_TONE: Record<
   "default" | "success" | "destructive" | "muted"
 > = {
   PENDING: "default",
+  AVAILABLE: "success",
+  RESERVED: "default",
   APPROVED: "success",
   REJECTED: "destructive",
   CANCELLED: "muted",
@@ -63,4 +65,7 @@ export const STATUS_TONE: Record<
   COMPLETED: "muted",
   EXPIRED: "muted",
   NO_SHOW: "destructive",
+  OCCUPIED: "destructive",
+  BLOCKED: "muted",
+  INACTIVE: "muted",
 };
