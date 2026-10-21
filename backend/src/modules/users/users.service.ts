@@ -41,6 +41,7 @@ export async function updateProfile(
     firstName: string;
     lastName: string;
     phone: string | null;
+    role: Role;
     paymentInfo: string | null;
     preferences: Record<string, unknown>;
     buildingNo: string | null;
@@ -81,8 +82,6 @@ export async function updateProfile(
   ) {
     throw badRequest('Building, floor, and unit details are only accepted for condominium tenants and owners.');
   }
-
-  console.log(data)
 
   const user = await prisma.user.update({
     where: { id: userId },

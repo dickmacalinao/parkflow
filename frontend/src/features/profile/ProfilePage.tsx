@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Select";
 import {
   Card,
   CardContent,
@@ -16,6 +17,11 @@ import { apiClient, getApiErrorMessage } from "../../lib/apiClient";
 import { useProperties } from "../properties/properties.hooks";
 import { ProfileFields } from "./profile.hooks";
 import { type StoredUser } from "../../lib/authStorage";
+
+const ROLE_TYPES = [
+  { label: "Property Owner", value: "PROPERTY_OWNER" },
+  { label: "Tenant", value: "TENANT" },
+];
 
 export function ProfilePage({
   userProfile,
@@ -37,12 +43,15 @@ export function ProfilePage({
     ) && assignedProperty?.type === "RESIDENTIAL_CONDOMINIUM";
   const {
     register,
+    watch,
     handleSubmit,
     reset,
     formState: { isSubmitting },
   } = useForm<ProfileFields>();
 
-  const isDisabled = !!userProfile;
+  const isDisabled =
+    !["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(user?.role ?? "") &&
+    userProfile;
 
   useEffect(() => {
     if (!isLoading) {
@@ -51,6 +60,7 @@ export function ProfilePage({
           (userProfile ? userProfile?.firstName : user?.firstName) ?? "",
         lastName: (userProfile ? userProfile?.lastName : user?.lastName) ?? "",
         phone: (userProfile ? userProfile?.phone : user?.phone) ?? "",
+        role: (userProfile ? userProfile?.role : user?.role) ?? "",
         paymentInfo:
           (userProfile ? userProfile?.paymentInfo : user?.paymentInfo) ?? "",
         buildingNo:
@@ -72,6 +82,7 @@ export function ProfilePage({
         firstName: fields.firstName,
         lastName: fields.lastName,
         phone: fields.phone.trim() || null,
+        role: fields?.role,
         paymentInfo: fields.paymentInfo.trim() || null,
         ...(showCondoAddress && {
           buildingNo: fields.buildingNo.trim() || null,
@@ -142,6 +153,25 @@ export function ProfilePage({
                     {...register("phone")}
                   />
                 </div>
+                {["PROPERTY_OWNER", "TENANT"].includes(
+                  userProfile?.role ?? user?.role ?? "",
+                ) && (
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Select
+                      className="w-full"
+                      id="role"
+                      disabled={isDisabled}
+                      {...register("role", { required: true })}
+                    >
+                      {ROLE_TYPES.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
 
                 {showCondoAddress && (
                   <div className="space-y-3 border-t border-border pt-4">
@@ -186,7 +216,7 @@ export function ProfilePage({
                     {...register("fbUrl")}
                   />
                 </div>
-                {"PROPERTY_OWNER" === (userProfile?.role ?? user?.role) && (
+                {"PROPERTY_OWNER" === watch("role") && (
                   <div>
                     <Label htmlFor="paymentInfo">Payment Information</Label>
                     <TextInput

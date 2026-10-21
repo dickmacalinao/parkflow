@@ -5,6 +5,7 @@ export interface ProfileFields {
   firstName: string;
   lastName: string;
   phone: string;
+  role: string;
   paymentInfo: string;
   buildingNo: string;
   floorNo: string;
