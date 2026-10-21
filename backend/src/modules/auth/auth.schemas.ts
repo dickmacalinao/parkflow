@@ -15,7 +15,7 @@ export const registerSchema = z.object({
   propertyId: z.string().uuid(),
   password,
   // Public self-registration is for tenants/visitors only; staff roles are created via invitation.
-  role: z.enum(['TENANT', 'VISITOR']).default('TENANT'),
+  role: z.enum(['PROPERTY_OWNER', 'TENANT', 'VISITOR']).default('TENANT'),
 });
 
 export const loginSchema = z.object({

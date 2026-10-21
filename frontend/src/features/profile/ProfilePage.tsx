@@ -51,7 +51,7 @@ export function ProfilePage({
 
   const isDisabled =
     !["SUPER_ADMIN", "PROPERTY_MANAGER"].includes(user?.role ?? "") &&
-    userProfile;
+    !!userProfile;
 
   useEffect(() => {
     if (!isLoading) {

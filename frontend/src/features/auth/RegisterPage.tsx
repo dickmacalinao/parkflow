@@ -19,6 +19,11 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 
+const ROLE_TYPES = [
+  { label: "Tenant", value: "TENANT" },
+  { label: "Property Owner", value: "PROPERTY_OWNER" },
+];
+
 export function RegisterPage() {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -43,7 +48,7 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterInput) => {
     setServerError(null);
     try {
-      await apiClient.post("/auth/register", { ...data, role: "TENANT" });
+      await apiClient.post("/auth/register", { ...data });
       setDone(true);
     } catch (err) {
       setServerError(getApiErrorMessage(err, "Could not create your account."));
@@ -124,6 +129,18 @@ export function RegisterPage() {
                 ))}
               </Select>
               <FormError message={errors.propertyId?.message} />
+            </div>
+
+            <div>
+              <Label htmlFor="role">Role</Label>
+              <Select id="role" {...register("role")} className="w-full">
+                {ROLE_TYPES?.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </Select>
+              <FormError message={errors.role?.message} />
             </div>
             <div>
               <Label htmlFor="phone">Phone (optional)</Label>
