@@ -214,7 +214,7 @@ function WeekMonthGrid({
             {period === "WEEK"
               ? day.toLocaleDateString(undefined, {
                   weekday: "short",
-                  day: "numeric",
+                  day: "2-digit",
                 })
               : day.getDate()}
           </div>
