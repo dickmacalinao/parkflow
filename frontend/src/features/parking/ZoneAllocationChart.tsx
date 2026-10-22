@@ -93,7 +93,7 @@ export const ALLOCATION_LEGEND = [
     bar: "bg-amber-500 ring-2 ring-foreground/60",
     label: "Allocated in period",
   },*/
-  { bar: "bg-red-500", label: "Now" },
+  { bar: "bg-blue-500", label: "Now" },
 ];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -142,7 +142,7 @@ function DayTimeline({ slots, reservationsBySlot, range }: DayTimelineProps) {
               })}
               {showNowLine && (
                 <div
-                  className="absolute inset-y-0 w-0.5 bg-red-500"
+                  className="absolute inset-y-0 w-0.5 bg-blue-500"
                   style={{ left: `${nowPct}%` }}
                   title="Current time"
                 />
@@ -208,7 +208,7 @@ function WeekMonthGrid({
             className={cn(
               "bg-card px-1 py-1 text-center text-[9px] font-medium text-muted-foreground",
               day.getTime() === todayMs &&
-                "border-x-2 border-x-red-500 text-red-500",
+                "border-x-2 border-x-blue-500 text-blue-500",
             )}
           >
             {period === "WEEK"
@@ -246,7 +246,7 @@ function WeekMonthGrid({
                     !booked &&
                       slot.status === "BLOCKED" &&
                       "bg-muted-foreground/30",
-                    day.getTime() === todayMs && "border-x-2 border-x-red-500",
+                    day.getTime() === todayMs && "border-x-2 border-x-blue-500",
                   )}
                 />
               );
