@@ -178,8 +178,8 @@ export function ReservationsListPage({
           <THead>
             <TR>
               <TH>Code</TH>
-              <TH>Property / Bay</TH>
-              {isStaff && !mine && <TH>Requested by</TH>}
+              <TH>Slot Code</TH>
+              {isStaff && !mine && <TH>Requested By</TH>}
               <TH>Reservation Dates</TH>
               <TH>Requested Date</TH>
               <TH className="text-right">Amount</TH>
@@ -212,9 +212,7 @@ export function ReservationsListPage({
                     {r.code}
                   </Link>
                 </TD>
-                <TD>
-                  {r.property.name} / {r.slot.code}
-                </TD>
+                <TD>{r.slot.code}</TD>
                 {isStaff && !mine && (
                   <TD>
                     {r.requestedBy.firstName} {r.requestedBy.lastName}

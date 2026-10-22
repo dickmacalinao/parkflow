@@ -304,7 +304,7 @@ export function SlotsAvailabilityPage() {
       {slotsByZone.size > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-2">
               <CardTitle>Parking Allocation</CardTitle>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex gap-1">

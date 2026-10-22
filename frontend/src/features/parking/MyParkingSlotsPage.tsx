@@ -206,7 +206,7 @@ export function MyParkingSlotsPage() {
           <THead>
             <TR>
               <TH>Zone</TH>
-              <TH>Code</TH>
+              <TH>Slot Code</TH>
               <TH>Type</TH>
               <TH>Slot Status</TH>
               <TH>Hourly Rate</TH>
