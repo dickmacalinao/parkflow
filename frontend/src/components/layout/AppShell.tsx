@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNav } from "./MobileNav";
+import { ContactMe } from "./ContactMe";
 
 export function AppShell() {
   return (
@@ -16,6 +17,7 @@ export function AppShell() {
           <Outlet />
         </main>
         <MobileNav />
+        <ContactMe />
       </div>
     </div>
   );
