@@ -1,11 +1,11 @@
 export function ContactMe() {
   return (
-    <div className="fixed right-5 bottom-12 sm:bottom-5 z-20">
+    <div className="fixed right-5 bottom-20 sm:left-3 z-20">
       <a
         href="https://wa.me/639770180467?text=Hi!%20I'd%20like%20to%20inquire%20about%20ParkFlow."
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] shadow-[0_4px_20px_-2px_rgba(37,211,102,0.5)] hover:bg-[#1ebe5b] hover:scale-105 active:scale-95 transition-all duration-200"
+        className="group relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#25D366] shadow-[0_4px_20px_-2px_rgba(37,211,102,0.5)] hover:bg-[#1ebe5b] hover:scale-105 active:scale-95 transition-all duration-200"
         title="Chat on WhatsApp"
         aria-label="Chat on WhatsApp"
       >
