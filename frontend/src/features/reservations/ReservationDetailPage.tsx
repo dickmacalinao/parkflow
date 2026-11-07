@@ -184,7 +184,11 @@ export function ReservationDetailPage() {
                 id="requestedBy"
                 placeholder="e.g. Full Name"
                 disabled
-                value={`${reservation?.requestedBy?.firstName || ""} ${reservation?.requestedBy?.lastName || ""}`}
+                value={
+                  reservation?.requestedBy
+                    ? `${reservation.requestedBy.firstName} ${reservation.requestedBy.lastName}`
+                    : (reservation?.guestName ?? "")
+                }
               />
             </div>
 
@@ -194,7 +198,11 @@ export function ReservationDetailPage() {
                 id="plateNumber"
                 placeholder="e.g. ABC 123"
                 disabled
-                value={reservation?.vehicle?.plateNumber || ""}
+                value={
+                  reservation?.vehicle?.plateNumber ||
+                  reservation?.guestPlate ||
+                  ""
+                }
               />
             </div>
 
@@ -245,7 +253,7 @@ export function ReservationDetailPage() {
                 <CardTitle>Payment Information</CardTitle>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Label htmlFor="paymentMethod">Payment method</Label>
                     <Select
                       id="paymentMethod"
                       aria-label="Filter users by property"
@@ -267,7 +275,7 @@ export function ReservationDetailPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="providerRef">Payment Reference No.</Label>
+                    <Label htmlFor="providerRef">Payment reference no.</Label>
                     <Input
                       id="providerRef"
                       type="number"

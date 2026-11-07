@@ -15,6 +15,7 @@ import usersRoutes from './modules/users/users.routes.js';
 import propertiesRoutes from './modules/properties/properties.routes.js';
 import parkingRoutes from './modules/parking/parking.routes.js';
 import reservationsRoutes from './modules/reservations/reservations.routes.js';
+import publicReservationsRoutes from './modules/reservations/publicReservations.routes.js';
 import visitorPassesRoutes from './modules/visitorPasses/visitorPasses.routes.js';
 import notificationsRoutes from './modules/notifications/notifications.routes.js';
 import auditRoutes from './modules/audit/audit.routes.js';
@@ -47,6 +48,7 @@ export function createApp() {
   app.use('/api/properties', propertiesRoutes);
   app.use('/api/parking', parkingRoutes);
   app.use('/api/reservations', reservationsRoutes);
+  app.use('/api/public/reservations', publicReservationsRoutes);
   app.use('/api/visitor-passes', visitorPassesRoutes);
   app.use('/api/notifications', notificationsRoutes);
   app.use('/api/audit-logs', auditRoutes);

@@ -12,7 +12,9 @@ export interface Reservation {
   amount: string;
   slot: { id: string; code: string; type: string };
   property: { id: string; name: string };
-  requestedBy: { id: string; firstName: string; lastName: string; email: string };
+  requestedBy: { id: string; firstName: string; lastName: string; email: string } | null;
+  guestName: string | null;
+  guestPlate: string | null;
 }
 
 export function useReservation(id?: string) {

@@ -16,6 +16,7 @@ import { ZonesPage } from "../features/parking/ZonesPage";
 import { ReservationsPage } from "../features/reservations/ReservationsPage";
 import { MyReservationsPage } from "../features/reservations/MyReservationsPage";
 import { NewReservationPage } from "../features/reservations/NewReservationPage";
+import { PublicReservationPage } from "../features/reservations/PublicReservationPage";
 import { ReservationDetailPage } from "../features/reservations/ReservationDetailPage";
 //import { VisitorPassesPage } from "../features/visitors/VisitorPassesPage";
 import { UsersAdminPage } from "../features/admin/UsersAdminPage";
@@ -38,6 +39,16 @@ export const router = createBrowserRouter([
   { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/verify-email", element: <VerifyEmailPage /> },
   { path: "/accept-invite", element: <ResetPasswordPage /> },
+  { path: "/reserve", element: <PublicReservationPage /> },
+  {
+    path: "/reserve/owner/:id",
+    element: <PublicReservationPage kind="owner" />,
+  },
+  {
+    path: "/reserve/property/:id",
+    element: <PublicReservationPage kind="property" />,
+  },
+  { path: "/reserve/*", element: <PublicReservationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
   {

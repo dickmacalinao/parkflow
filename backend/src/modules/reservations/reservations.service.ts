@@ -285,7 +285,7 @@ export async function decideReservation(
     data: { status, decidedById: req.user!.id, decidedAt: new Date(), decisionReason: reason },
   });
 
-  if (status === ReservationStatus.APPROVED) {
+  if (status === ReservationStatus.APPROVED && reservation.payment) {
     await prisma.payment.update({
       where: { id: reservation.payment?.id },
       data: { status: PaymentStatus.PAID },
@@ -297,12 +297,13 @@ export async function decideReservation(
   }
 
   const tpl = emailTemplates.reservationDecision(
-    reservation.requestedBy.firstName,
+    reservation.requestedBy?.firstName ?? 'Guest',
     status === ReservationStatus.APPROVED,
     reservation.property.name,
     reservation.slot.code
   );
-  await sendEmail({ to: reservation.requestedBy.email, ...tpl });
+  const recipient = reservation.requestedBy?.email ?? reservation.guestEmail;
+  if (recipient) await sendEmail({ to: recipient, ...tpl });
 
   await recordAudit({
     req,

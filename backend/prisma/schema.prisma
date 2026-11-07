@@ -381,8 +381,12 @@ model Reservation {
   vehicleId  String?
   vehicle    Vehicle?    @relation(fields: [vehicleId], references: [id])
 
-  requestedById  String
-  requestedBy    User      @relation("ReservationRequestedBy", fields: [requestedById], references: [id])
+  requestedById  String?
+  requestedBy    User?     @relation("ReservationRequestedBy", fields: [requestedById], references: [id])
+  guestName      String?
+  guestEmail     String?
+  guestPhone     String?
+  guestPlate     String?
   decidedById    String?
   decidedBy      User?     @relation("ReservationDecidedBy", fields: [decidedById], references: [id])
   decidedAt      DateTime? @db.Timestamptz(6)

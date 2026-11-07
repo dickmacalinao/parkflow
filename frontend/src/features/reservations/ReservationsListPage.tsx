@@ -215,7 +215,9 @@ export function ReservationsListPage({
                 <TD>{r.slot.code}</TD>
                 {isStaff && !mine && (
                   <TD>
-                    {r.requestedBy.firstName} {r.requestedBy.lastName}
+                    {r.requestedBy
+                      ? `${r.requestedBy.firstName} ${r.requestedBy.lastName}`
+                      : (r.guestName ?? "Guest")}
                   </TD>
                 )}
                 <TD className="text-xs">
