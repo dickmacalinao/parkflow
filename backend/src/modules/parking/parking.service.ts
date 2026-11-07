@@ -4,6 +4,9 @@ import { prisma } from '../../lib/prisma.js';
 import { forbidden, notFound } from '../../utils/errors.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
+import { isSlotBookableByOthers } from './slotAvailability.js';
+
+const SHARING_FIELDS = ['isShared', 'availableDays', 'availableFromDate', 'availableToDate', 'availableStartTime', 'availableEndTime'];
 
 async function assertZoneAccess(req: Request, zoneId: string): Promise<string> {
   const zone = await prisma.parkingZone.findFirst({ where: { id: zoneId, deletedAt: null }, select: { propertyId: true } });
@@ -69,7 +72,7 @@ export async function deleteZone(id: string, req: Request) {
 }
 
 export async function createSlot(
-  data: { zoneId: string; code: string; type: SlotType; hourlyRate?: number; dailyRate: number; monthlyRate?: number; isEvCharging: boolean },
+  data: { zoneId: string; code: string; type: SlotType; hourlyRate?: number; dailyRate: number; monthlyRate?: number; isEvCharging: boolean; isShared?: boolean; availableDays?: number[]; availableFromDate?: Date | null; availableToDate?: Date | null; availableStartTime?: string | null; availableEndTime?: string | null },
   req: Request
 ) {
   await assertZoneAccess(req, data.zoneId);
@@ -159,13 +162,32 @@ export async function listSlots(
       ...(assignedPropertyId ? { propertyId: assignedPropertyId } : {}),
     },
   };
+  const include = {
+    zone: { select: { id: true, name: true, propertyId: true, property: { select: { timezone: true } } } },
+  };
+
+  if (hasDateRange) {
+    // Sharing windows depend on the property's timezone, so filter in code before paginating.
+    const candidates = await prisma.parkingSlot.findMany({ where, orderBy: { code: 'asc' }, include });
+    const bookable = candidates.filter((slot) =>
+      isSlotBookableByOthers(slot, slot.zone.property.timezone, filters.startAt!, filters.endAt!),
+    );
+    const start = (filters.page - 1) * filters.pageSize;
+    return {
+      rows: bookable.slice(start, start + filters.pageSize),
+      total: bookable.length,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    };
+  }
+
   const [rows, total] = await Promise.all([
     prisma.parkingSlot.findMany({
       where,
       orderBy: { code: 'asc' },
       skip: (filters.page - 1) * filters.pageSize,
       take: filters.pageSize,
-      include: { zone: { select: { id: true, name: true, propertyId: true } } },
+      include,
     }),
     prisma.parkingSlot.count({ where }),
   ]);
@@ -235,11 +257,14 @@ export async function reviewSlot(id: string, decision: 'APPROVED' | 'REJECTED', 
 export async function updateSlot(id: string, data: Record<string, unknown>, req: Request) {
   await assertSlotAccess(req, id);
   await assertSlotOwner(req, id);
+  console.log(data);
+  // Changing only when a slot is shared is the owner's call and doesn't need manager re-verification.
+  const sharingOnly = Object.keys(data).every((key) => SHARING_FIELDS.includes(key));
   const slot = await prisma.parkingSlot.update({
     where: { id },
     data: {
       ...data,
-      ...(req.user!.role === 'PROPERTY_OWNER'
+      ...(req.user!.role === 'PROPERTY_OWNER' && !sharingOnly
         ? {
             approvalStatus: SlotApprovalStatus.PENDING_VERIFICATION,
             approvalReason: null,

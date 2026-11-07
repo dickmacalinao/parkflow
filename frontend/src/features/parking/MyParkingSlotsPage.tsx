@@ -24,6 +24,7 @@ import {
   type Slot,
 } from "./parking.hooks";
 import { STATUS_TONE } from "../../components/Types";
+import { SlotSharingDialog, describeSharing } from "./SlotSharingDialog";
 
 const SLOT_TYPES = [
   "STANDARD",
@@ -83,6 +84,7 @@ export function MyParkingSlotsPage() {
   const deleteSlot = useDeleteSlot();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
+  const [sharingSlot, setSharingSlot] = useState<Slot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const setStatus = useSetMySlotStatus();
   const {
@@ -209,6 +211,7 @@ export function MyParkingSlotsPage() {
               <TH>Slot Code</TH>
               <TH>Type</TH>
               <TH>Slot Status</TH>
+              <TH>Availability</TH>
               <TH>Hourly Rate</TH>
               <TH>Daily Rate</TH>
               <TH>Monthly Rate</TH>
@@ -229,6 +232,9 @@ export function MyParkingSlotsPage() {
                   >
                     {slot.status.toLowerCase()}
                   </Badge>
+                </TD>
+                <TD className="text-xs">
+                  {slot.deletedAt ? "—" : describeSharing(slot)}
                 </TD>
                 <TD>{slot.hourlyRate ? `$${slot.hourlyRate}` : "—"}</TD>
                 <TD>${slot.dailyRate}</TD>
@@ -262,6 +268,9 @@ export function MyParkingSlotsPage() {
                       <ActionMenuItem onClick={() => openEdit(slot)}>
                         Edit
                       </ActionMenuItem>
+                      <ActionMenuItem onClick={() => setSharingSlot(slot)}>
+                        Set availability
+                      </ActionMenuItem>
                       {slot.status !== "BLOCKED" && (
                         <ActionMenuItem onClick={() => handleBlock(slot)}>
                           Block
@@ -286,7 +295,7 @@ export function MyParkingSlotsPage() {
             {!slots?.length && (
               <TR>
                 <TD
-                  colSpan={8}
+                  colSpan={10}
                   className="py-8 text-center text-muted-foreground"
                 >
                   No parking slots registered for this property.
@@ -301,6 +310,11 @@ export function MyParkingSlotsPage() {
         pageSize={pageSize}
         total={slotsTotal}
         onPageChange={setPage}
+      />
+
+      <SlotSharingDialog
+        slot={sharingSlot}
+        onClose={() => setSharingSlot(null)}
       />
 
       <Dialog

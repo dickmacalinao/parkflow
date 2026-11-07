@@ -14,6 +14,12 @@ export interface Slot {
   ownerUserId: string;
   isEvCharging: boolean;
   deletedAt?: string | null;
+  isShared?: boolean;
+  availableDays?: number[];
+  availableFromDate?: string | null;
+  availableToDate?: string | null;
+  availableStartTime?: string | null;
+  availableEndTime?: string | null;
   zone: { id: string; name: string; propertyId: string };
 }
 
@@ -25,6 +31,12 @@ export interface SlotInput {
   dailyRate: number;
   monthlyRate?: number;
   isEvCharging: boolean;
+  isShared?: boolean;
+  availableDays?: number[];
+  availableFromDate?: string | null;
+  availableToDate?: string | null;
+  availableStartTime?: string | null;
+  availableEndTime?: string | null;
 }
 
 export interface Zone {

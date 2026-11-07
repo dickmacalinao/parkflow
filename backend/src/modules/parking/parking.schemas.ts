@@ -13,7 +13,9 @@ export const updateZoneSchema = createZoneSchema
   .omit({ propertyId: true })
   .extend({ description: z.string().trim().nullable().optional() });
 
-export const createSlotSchema = z.object({
+const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:mm.');
+
+const slotBaseSchema = z.object({
   zoneId: z.string().uuid(),
   code: z.string().trim().min(1),
   type: z.nativeEnum(SlotType).default(SlotType.STANDARD),
@@ -21,7 +23,33 @@ export const createSlotSchema = z.object({
   dailyRate: z.number().min(0),
   monthlyRate: z.number().min(0).optional(),
   isEvCharging: z.boolean().default(false),
+  isShared: z.boolean().default(false),
+  availableDays: z.array(z.number().int().min(0).max(6)).default([]),
+  availableFromDate: z.coerce.date().nullable().optional(),
+  availableToDate: z.coerce.date().nullable().optional(),
+  availableStartTime: timeOfDay.nullable().optional(),
+  availableEndTime: timeOfDay.nullable().optional(),
 });
+
+type SharingFields = {
+  availableFromDate?: Date | null;
+  availableToDate?: Date | null;
+  availableStartTime?: string | null;
+  availableEndTime?: string | null;
+};
+
+function validateSharing(data: SharingFields, ctx: z.RefinementCtx) {
+  if (data.availableFromDate && data.availableToDate && data.availableToDate < data.availableFromDate) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['availableToDate'], message: 'End date must not be before start date.' });
+  }
+  if (Boolean(data.availableStartTime) !== Boolean(data.availableEndTime)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['availableEndTime'], message: 'Provide both start and end time.' });
+  } else if (data.availableStartTime && data.availableEndTime && data.availableEndTime <= data.availableStartTime) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['availableEndTime'], message: 'End time must be after start time.' });
+  }
+}
+
+export const createSlotSchema = slotBaseSchema.superRefine(validateSharing);
 
 export const bulkCreateSlotsSchema = z.object({
   zoneId: z.string().uuid(),
@@ -33,7 +61,7 @@ export const bulkCreateSlotsSchema = z.object({
   hourlyRate: z.number().min(0).optional(),
 });
 
-export const updateSlotSchema = createSlotSchema.partial().omit({ zoneId: true });
+export const updateSlotSchema = slotBaseSchema.partial().omit({ zoneId: true }).superRefine(validateSharing);
 
 export const slotStatusSchema = z.object({ status: z.nativeEnum(SlotStatus) });
 

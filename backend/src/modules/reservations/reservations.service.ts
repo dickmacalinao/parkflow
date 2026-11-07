@@ -6,6 +6,7 @@ import { generateOpaqueToken } from '../../utils/tokens.js';
 import { recordAudit } from '../audit/audit.service.js';
 import { emailTemplates, sendEmail } from '../../lib/email.js';
 import { assertRequestPropertyAccess, getAssignedPropertyId } from '../properties/propertyAccess.js';
+import { isSlotBookableByOthers } from '../parking/slotAvailability.js';
 import { env } from '../../config/env.js';
 
 function generateCode(): string {
@@ -59,7 +60,7 @@ export async function createReservation(
   await assertRequestPropertyAccess(req, input.propertyId, false);
   const property = await prisma.property.findFirst({
     where: { id: input.propertyId, status: 'ACTIVE', deletedAt: null },
-    select: { id: true, name: true },
+    select: { id: true, name: true, timezone: true },
   });
   if (!property) throw badRequest('Reservations are available only at active properties.');
   const slot = await prisma.parkingSlot.findFirst({
@@ -73,6 +74,9 @@ export async function createReservation(
   if (!slot) throw notFound('Parking slot not found for this property.');
   if (slot.status === 'BLOCKED' || slot.status === 'INACTIVE') {
     throw conflict('This bay is not available for booking.');
+  }
+  if (!isSlotBookableByOthers(slot, property.timezone, input.startAt, input.endAt)) {
+    throw conflict('The slot owner has not made this bay available for the selected dates and times.');
   }
 
   // Fast, friendly pre-check. The database's exclusion constraint (see

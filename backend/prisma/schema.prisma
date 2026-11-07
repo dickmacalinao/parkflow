@@ -324,6 +324,15 @@ model ParkingSlot {
   monthlyRate  Decimal?    @db.Decimal(8, 2)
   isEvCharging Boolean     @default(false)
 
+  // Owner-registered slots are personal unless shared. When shared, the optional window below
+  // limits when others may book (evaluated in the property's timezone); empty = no limit.
+  isShared           Boolean   @default(false)
+  availableDays      Int[] // 0=Sunday..6=Saturday
+  availableFromDate  DateTime? @db.Date
+  availableToDate    DateTime? @db.Date
+  availableStartTime String? // "HH:mm"
+  availableEndTime   String? // "HH:mm"
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
