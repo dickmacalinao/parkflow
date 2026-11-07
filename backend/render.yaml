@@ -7,6 +7,7 @@ services:
   - type: web
     name: parkflow-api
     runtime: docker
+    preDeployCommand: npx prisma migrate deploy
     dockerfilePath: ./Dockerfile
     plan: starter
     healthCheckPath: /health
