@@ -49,6 +49,10 @@ docker compose up --build
    DATABASE_URL="<neon-connection-string>" psql "$DATABASE_URL" -f backend/prisma/sql/add-reservation-overlap-constraint.sql
    DATABASE_URL="<neon-connection-string>" npm --prefix backend run seed   # optional, demo data
    ```
+4. Run latest migrations for every deployment with database changes:
+   ```bash
+   DATABASE_URL="<neon-connection-string>" npx prisma migrate deploy
+   ```
 
 ## 3. Backend: Render
 
