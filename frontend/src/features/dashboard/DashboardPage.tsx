@@ -44,26 +44,6 @@ export function DashboardPage() {
         </p>
       </div>
 
-      <div>
-        {/* 
-        <a
-          href="/reserve/property/<property-id"
-          className="block p-5 bg-primary/10 rounded-md text-primary"
-        >
-          Public reservation for entire property
-        </a>
-        */}
-        {user?.role === "PROPERTY_OWNER" && (
-          <a
-            href={`/reserve/owner/${user?.id}`}
-            target="_blank"
-            className="block p-5 bg-primary/10 rounded-md text-primary"
-          >
-            Public reservation for property owner
-          </a>
-        )}
-      </div>
-
       {loadingCounts ? (
         <Spinner />
       ) : (

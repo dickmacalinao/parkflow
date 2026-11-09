@@ -229,6 +229,11 @@ export function PropertiesListPage() {
                           Delete
                         </ActionMenuItem>
                       )}
+                      <ActionMenuItem>
+                        <Link to={`/reserve/property/${p.id}`} target="_blank">
+                          Public reservation link
+                        </Link>
+                      </ActionMenuItem>
                     </ActionMenu>
                   </TD>
                 )}

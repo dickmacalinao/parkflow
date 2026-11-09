@@ -111,6 +111,13 @@ export function ProfilePage({
             <p className="text-sm text-muted-foreground">
               {userProfile?.email ?? user?.email}
             </p>
+            <a
+              className="text-sm link hover:underline"
+              href={`/reserve/owner/${userProfile?.id ?? user?.id}`}
+              target="_blank"
+            >
+              Public reservation link
+            </a>
           </div>
 
           <Card>
